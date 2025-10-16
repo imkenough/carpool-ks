@@ -22,22 +22,20 @@ export interface CardParams {
 
 export const MyCard: React.FC<CardParams> = (props) => {
   return (
-    <Card className="w-full max-w-sm" id={props.id}>
+    <Card className="my-1.5 w-full max-w-sm" id={props.id}>
       <CardHeader>
         <CardTitle>
           {props.from} to {props.destination}
         </CardTitle>
-        <CardDescription>
-          Posted by {props.name}
-        </CardDescription>
+        <CardDescription>Posted by {props.name}</CardDescription>
       </CardHeader>
       <CardContent className="gap-4">
         <View className="flex flex-row items-center">
-          <Text className="font-bold w-1/4">Date</Text>
+          <Text className="w-1/4 font-bold">Date</Text>
           <Text className="w-3/4">{props.date.toLocaleDateString()}</Text>
         </View>
         <View className="flex flex-row items-center">
-          <Text className="font-bold w-1/4">Time</Text>
+          <Text className="w-1/4 font-bold">Time</Text>
           <Text className="w-3/4">{props.date.toLocaleTimeString()}</Text>
         </View>
       </CardContent>

@@ -49,7 +49,7 @@ export default function Screen() {
 
   return (
     <>
-      <View className="flex-1 px-8 pb-4 pt-24">
+      <View className="flex-1 p-4">
         <Text className="mb-4" variant="h3">
           Create a Ride Request
         </Text>

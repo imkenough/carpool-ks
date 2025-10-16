@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, Car, SunIcon, MoonStarIcon } from 'lucide-react-native';
+import { Home, Car, User, SunIcon, MoonStarIcon } from 'lucide-react-native';
 import { DateProvider } from '@/lib/date-context';
 import React from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Carpool',
-            headerTransparent: true,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: 'hsl(var(--background))' },
             headerRight: () => <ThemeToggle />,
             tabBarIcon: ({ color }) => <Home color={color} />,
           }}
@@ -23,9 +24,20 @@ export default function TabLayout() {
           name="rides"
           options={{
             title: 'Rides',
-            headerTransparent: true,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: 'hsl(var(--background))' },
             headerRight: () => <ThemeToggle />,
             tabBarIcon: ({ color }) => <Car color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: 'hsl(var(--background))' },
+            headerRight: () => <ThemeToggle />,
+            tabBarIcon: ({ color }) => <User color={color} />,
           }}
         />
       </Tabs>

@@ -57,27 +57,24 @@ export default function RidesScreen() {
 
   // ✅ Return JSX
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-      }}>
-      <FlatList
-        data={cardData}
-        renderItem={({ item }) => {
-          return (
-            <MyCard
-              id={item.id}
-              name={item.name}
-              destination={item.destination}
-              date={item.date}
-              from={item.from}
-            />
-          );
-        }}
-      />
+    <View className="flex-1 items-center justify-center px-4">
+      <View>
+        <FlatList
+          data={cardData}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => {
+            return (
+              <MyCard
+                id={item.id}
+                name={item.name}
+                destination={item.destination}
+                date={item.date}
+                from={item.from}
+              />
+            );
+          }}
+        />
+      </View>
     </View>
   );
 }
