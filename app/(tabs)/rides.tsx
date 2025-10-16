@@ -70,7 +70,7 @@ export default function RidesScreen() {
           return (
             <MyCard
               id={item.id}
-              name={it.name}
+              name={item.name}
               destination={item.destination}
               date={item.date}
               from={item.from}

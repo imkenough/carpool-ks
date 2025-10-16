@@ -8,8 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
 import { Text } from '@/components/ui/text';
 import { View } from 'react-native';
 
@@ -24,20 +23,27 @@ export interface CardParams {
 export const MyCard: React.FC<CardParams> = (props) => {
   return (
     <Card className="w-full max-w-sm" id={props.id}>
-      <CardHeader className="flex-row">
-        <View className="flex-1 gap-1.5">
-          <CardTitle>Destination : {props.destination}</CardTitle>
-          <CardDescription>from : {props.from}</CardDescription>
-        </View>
+      <CardHeader>
+        <CardTitle>
+          {props.from} to {props.destination}
+        </CardTitle>
+        <CardDescription>
+          Posted by {props.name}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <View className="w-full justify-center gap-4">
-          <Text>Time: {props.date.toString()}</Text>
+      <CardContent className="gap-4">
+        <View className="flex flex-row items-center">
+          <Text className="font-bold w-1/4">Date</Text>
+          <Text className="w-3/4">{props.date.toLocaleDateString()}</Text>
+        </View>
+        <View className="flex flex-row items-center">
+          <Text className="font-bold w-1/4">Time</Text>
+          <Text className="w-3/4">{props.date.toLocaleTimeString()}</Text>
         </View>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
+      <CardFooter>
         <Button className="w-full">
-          <Text>Join</Text>
+          <Text>Join Ride</Text>
         </Button>
       </CardFooter>
     </Card>
