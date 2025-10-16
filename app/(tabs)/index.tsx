@@ -1,19 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { Stack } from 'expo-router';
-import { MoonStarIcon, SunIcon } from 'lucide-react-native';
+import { Stack, useRouter } from 'expo-router';
+import { Loader2, MoonStarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { View } from 'react-native';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
-
-const SCREEN_OPTIONS = {
-  title: 'Carpool',
-  headerTransparent: true,
-  headerRight: () => <ThemeToggle />,
-};
+import DatePicker from 'react-native-date-picker';
+import { useDate } from '@/lib/date-context';
 
 const travelOptions = [
   { label: 'To College', value: 'to-college' },
@@ -34,6 +30,9 @@ export default function Screen() {
   const [location, setLocation] = React.useState('airport');
   const [customLocation, setCustomLocation] = React.useState('');
   const [debouncedCustomLocation, setDebouncedCustomLocation] = React.useState('');
+  const { date, setDate } = useDate();
+  const router = useRouter();
+  const [disable, setDisable] = React.useState<'idle' | 'spinning'>('idle');
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -45,12 +44,8 @@ export default function Screen() {
     };
   }, [customLocation]);
 
-  // You can now use `debouncedCustomLocation` to perform your search
-
   return (
     <>
-      <Stack.Screen options={SCREEN_OPTIONS} />
-
       <View className="flex-1 px-8 pb-4 pt-24">
         <Text className="mb-4" variant="h3">
           I want to travel
@@ -61,7 +56,7 @@ export default function Screen() {
           onValueChange={setTravelDirection}
         />
 
-        <View className="my-8" />
+        <View className="my-4" />
 
         <Text className="mb-4" variant="h3">
           Select Location
@@ -80,26 +75,37 @@ export default function Screen() {
             className="mt-8"
           />
         )}
+
+        <View className="my-4" />
+
+        <Text className="mb-4" variant="h3">
+          Select Date & Time
+        </Text>
+        <DatePicker
+          date={date}
+          onDateChange={setDate}
+          mode="datetime"
+          minuteInterval={15}
+          onStateChange={(val) => setDisable(val)}
+        />
+
+        <View className="my-4" />
+        {disable === 'idle' ? (
+          <Button
+            onPress={() => {
+              router.push({
+                pathname: '/rides',
+                params: { travelDirection, location },
+              });
+            }}>
+            <Text>Confirm</Text>
+          </Button>
+        ) : (
+          <Button disabled>
+            <Text>Confirm</Text>
+          </Button>
+        )}
       </View>
     </>
-  );
-}
-
-const THEME_ICONS = {
-  dark: SunIcon,
-  light: MoonStarIcon,
-};
-
-function ThemeToggle() {
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-
-  return (
-    <Button
-      onPressIn={toggleColorScheme}
-      size="icon"
-      variant="ghost"
-      className="ios:size-9 rounded-full web:mx-4">
-      <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-5" />
-    </Button>
   );
 }
