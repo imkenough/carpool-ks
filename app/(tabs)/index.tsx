@@ -12,8 +12,8 @@ import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
 
 const travelOptions = [
-  { label: 'To College', value: 'to-college' },
-  { label: 'From College', value: 'from-college' },
+  { label: 'Going to College', value: 'to-college' },
+  { label: 'Leaving College', value: 'from-college' },
 ];
 
 const locationOptions = [
@@ -44,11 +44,14 @@ export default function Screen() {
     };
   }, [customLocation]);
 
+  const locationTitle =
+    travelDirection === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
+
   return (
     <>
       <View className="flex-1 px-8 pb-4 pt-24">
         <Text className="mb-4" variant="h3">
-          I want to travel
+          Create a Ride Request
         </Text>
         <ButtonGroup
           options={travelOptions}
@@ -59,7 +62,7 @@ export default function Screen() {
         <View className="my-4" />
 
         <Text className="mb-4" variant="h3">
-          Select Location
+          {locationTitle}
         </Text>
         <ButtonGroup
           options={locationOptions}
@@ -93,16 +96,17 @@ export default function Screen() {
         {disable === 'idle' ? (
           <Button
             onPress={() => {
+              const rideLocation = location === 'custom' ? debouncedCustomLocation : location;
               router.push({
                 pathname: '/rides',
-                params: { travelDirection, location },
+                params: { travelDirection, location: rideLocation },
               });
             }}>
-            <Text>Confirm</Text>
+            <Text>Find Rides</Text>
           </Button>
         ) : (
           <Button disabled>
-            <Text>Confirm</Text>
+            <Text>Find Rides</Text>
           </Button>
         )}
       </View>
