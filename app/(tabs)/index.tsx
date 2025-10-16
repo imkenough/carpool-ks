@@ -49,8 +49,8 @@ export default function Screen() {
 
   return (
     <>
-      <View className="flex-1 px-8 pb-4 pt-24">
-        <Text className="mb-4" variant="h3">
+      <View className="flex-1 p-4">
+        <Text className="mb-4" variant="h4">
           Create a Ride Request
         </Text>
         <ButtonGroup
@@ -61,7 +61,7 @@ export default function Screen() {
 
         <View className="my-4" />
 
-        <Text className="mb-4" variant="h3">
+        <Text className="mb-4" variant="h4">
           {locationTitle}
         </Text>
         <ButtonGroup
@@ -81,7 +81,7 @@ export default function Screen() {
 
         <View className="my-4" />
 
-        <Text className="mb-4" variant="h3">
+        <Text className="mb-4" variant="h4">
           Select Date & Time
         </Text>
         <DatePicker
