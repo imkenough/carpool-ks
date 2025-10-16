@@ -1,69 +1,68 @@
 import { View } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { useDate } from '@/lib/date-context';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { MoonStarIcon, SunIcon } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import * as React from 'react';
-import { ButtonGroup } from '@/components/ui/button-group';
-import { Input } from '@/components/ui/input';
-import DatePicker from 'react-native-date-picker';
+import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { CardParams, MyCard } from '@/components/mycard';
 import { FlatList } from 'react-native';
+import { useDate } from '@/lib/date-context';
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+
+import { getFakeCardData } from '@/lib/fake-card-data';
 
 export default function RidesScreen() {
   const { travelDirection, location } = useLocalSearchParams() as {
     travelDirection: string;
     location: string;
   };
-
   const { date } = useDate();
+
+  const [filtersCleared, setFiltersCleared] = React.useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setFiltersCleared(false);
+    }, [])
+  );
+
+  const safeLocation = location || '';
 
   const from =
     travelDirection === 'to-college'
-      ? location.charAt(0).toUpperCase() + location.slice(1)
+      ? safeLocation.charAt(0).toUpperCase() + safeLocation.slice(1)
       : 'College';
   const destination =
     travelDirection === 'to-college'
       ? 'College'
-      : location.charAt(0).toUpperCase() + location.slice(1);
+      : safeLocation.charAt(0).toUpperCase() + safeLocation.slice(1);
 
-  // ✅ Example array of cards (now defined AFTER variables exist)
-  const cardData: CardParams[] = [
-    {
-      id: '1',
-      name: 'John D.',
-      destination: destination,
-      date: date,
-      from: from,
-    },
-    {
-      id: '2',
-      name: 'Jane S.',
-      destination: destination,
-      date: date,
-      from: from,
-    },
-    {
-      id: '3',
-      name: 'Mike J.',
-      destination: destination,
-      date: date,
-      from: from,
-    },
-    {
-      id: '4',
-      name: 'Sarah W.',
-      destination: destination,
-      date: date,
-      from: from,
-    },
-  ];
+  const allRides = getFakeCardData();
+  ``;
+  const cardData = React.useMemo(() => {
+    if (filtersCleared) {
+      return allRides;
+    }
+    const filteredRides = allRides.filter((ride) => {
+      const timeDiff = Math.abs(ride.date.getTime() - date.getTime());
+      const oneHour = 3600 * 1000;
+      return ride.from === from && ride.destination === destination && timeDiff <= oneHour;
+    });
+    return filteredRides;
+  }, [filtersCleared, allRides, from, destination, date]);
 
   return (
-    <View className="flex-1 items-center justify-center px-4">
+    <View className="flex-1 px-4">
+      {filtersCleared ? (
+        <Text className="my-4 text-lg font-bold">Showing all rides</Text>
+      ) : (
+        <View className="my-4 flex-row items-center justify-between">
+          <Text className="shrink text-lg font-bold">
+            Displaying rides on {date.toLocaleDateString()} around {date.toLocaleTimeString()}
+          </Text>
+          <Button onPress={() => setFiltersCleared(true)} variant="outline">
+            <Text>Clear</Text>
+          </Button>
+        </View>
+      )}
       <View>
         <FlatList
           data={cardData}
