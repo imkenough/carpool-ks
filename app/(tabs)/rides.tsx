@@ -14,48 +14,54 @@ import { CardParams, MyCard } from '@/components/mycard';
 import { FlatList } from 'react-native';
 
 export default function RidesScreen() {
-  // ✅ Get params safely
   const { travelDirection, location } = useLocalSearchParams() as {
     travelDirection: string;
     location: string;
   };
 
-  // ✅ Get date context
   const { date } = useDate();
+
+  const from =
+    travelDirection === 'to-college'
+      ? location.charAt(0).toUpperCase() + location.slice(1)
+      : 'College';
+  const destination =
+    travelDirection === 'to-college'
+      ? 'College'
+      : location.charAt(0).toUpperCase() + location.slice(1);
 
   // ✅ Example array of cards (now defined AFTER variables exist)
   const cardData: CardParams[] = [
     {
       id: '1',
-      name: 'kenny',
-      destination: travelDirection,
+      name: 'John D.',
+      destination: destination,
       date: date,
-      from: location,
+      from: from,
     },
     {
       id: '2',
-      name: 'kenny',
-      destination: travelDirection,
+      name: 'Jane S.',
+      destination: destination,
       date: date,
-      from: location,
+      from: from,
     },
     {
       id: '3',
-      name: 'kenny',
-      destination: travelDirection,
+      name: 'Mike J.',
+      destination: destination,
       date: date,
-      from: location,
+      from: from,
     },
     {
       id: '4',
-      name: 'kenny',
-      destination: travelDirection,
+      name: 'Sarah W.',
+      destination: destination,
       date: date,
-      from: location,
+      from: from,
     },
   ];
 
-  // ✅ Return JSX
   return (
     <View className="flex-1 items-center justify-center px-4">
       <View>
