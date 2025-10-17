@@ -8,6 +8,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 
 import { getFakeCardData } from '@/lib/fake-card-data';
+import { getRides } from '@/utils/query/api';
 
 export default function RidesScreen() {
   const { travelDirection, location } = useLocalSearchParams() as {
@@ -15,7 +16,8 @@ export default function RidesScreen() {
     location: string;
   };
   const { date } = useDate();
-
+  const {data : database } = getRides( 'to-college' , 'airport' )
+  console.log(database)
   const [filtersCleared, setFiltersCleared] = React.useState(false);
 
   useFocusEffect(
@@ -24,30 +26,30 @@ export default function RidesScreen() {
     }, [])
   );
 
-  const safeLocation = location || '';
+  // const safeLocation = location || '';
 
-  const from =
-    travelDirection === 'to-college'
-      ? safeLocation.charAt(0).toUpperCase() + safeLocation.slice(1)
-      : 'College';
-  const destination =
-    travelDirection === 'to-college'
-      ? 'College'
-      : safeLocation.charAt(0).toUpperCase() + safeLocation.slice(1);
+  // const from =
+  //   travelDirection === 'to-college'
+  //     ? safeLocation.charAt(0).toUpperCase() + safeLocation.slice(1)
+  //     : 'College';
+  // const destination =
+  //   travelDirection === 'to-college'
+  //     ? 'College'
+  //     : safeLocation.charAt(0).toUpperCase() + safeLocation.slice(1);
 
-  const allRides = getFakeCardData();
-  ``;
-  const cardData = React.useMemo(() => {
-    if (filtersCleared) {
-      return allRides;
-    }
-    const filteredRides = allRides.filter((ride) => {
-      const timeDiff = Math.abs(ride.date.getTime() - date.getTime());
-      const oneHour = 3600 * 1000;
-      return ride.from === from && ride.destination === destination && timeDiff <= oneHour;
-    });
-    return filteredRides;
-  }, [filtersCleared, allRides, from, destination, date]);
+  // const allRides = getFakeCardData();
+  // ``;
+  // const cardData = React.useMemo(() => {
+  //   if (filtersCleared) {
+  //     return allRides;
+  //   }
+  //   const filteredRides = allRides.filter((ride) => {
+  //     const timeDiff = Math.abs(ride.date.getTime() - date.getTime());
+  //     const oneHour = 3600 * 1000;
+  //     return ride.from === from && ride.destination === destination && timeDiff <= oneHour;
+  //   });
+  //   return filteredRides;
+  // }, [filtersCleared, allRides, from, destination, date]);
 
   return (
     <View className="flex-1 px-4">
@@ -65,7 +67,7 @@ export default function RidesScreen() {
       )}
       <View>
         <FlatList
-          data={cardData}
+          data={database}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             return (
@@ -74,6 +76,7 @@ export default function RidesScreen() {
                 name={item.name}
                 destination={item.destination}
                 date={item.date}
+                time={item.time}
                 from={item.from}
               />
             );

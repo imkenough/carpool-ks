@@ -10,6 +10,7 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
+import { usePostRide } from '@/utils/query/api';
 
 const travelOptions = [
   { label: 'Going to College', value: 'to-college' },
@@ -33,6 +34,7 @@ export default function Screen() {
   const { date, setDate } = useDate();
   const router = useRouter();
   const [disable, setDisable] = React.useState<'idle' | 'spinning'>('idle');
+  const { mutate: postRide, isPending } = usePostRide();
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -109,6 +111,11 @@ export default function Screen() {
             <Text>Find Rides</Text>
           </Button>
         )}
+        <View className='h-4'/>
+        <Button
+            onPress={() => {postRide({ name: 'kenny', destination: travelDirection, from: location });}}>
+            <Text>Post Rides </Text>
+          </Button>
       </View>
     </>
   );
