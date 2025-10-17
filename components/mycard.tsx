@@ -16,8 +16,9 @@ export interface CardParams {
   id: string;
   name: string;
   destination: string;
-  date: Date;
+  date: string;
   from: string;
+  time : string
 }
 
 export const MyCard: React.FC<CardParams> = (props) => {
@@ -32,11 +33,11 @@ export const MyCard: React.FC<CardParams> = (props) => {
       <CardContent className="">
         <View className="flex flex-row items-center">
           <Text className="font-bold">Date: </Text>
-          <Text className="">{props.date.toLocaleDateString()}</Text>
+          <Text className="">{props.date}</Text>
         </View>
         <View className="flex flex-row items-center">
           <Text className="font-bold">Time: </Text>
-          <Text className="">{props.date.toLocaleTimeString()}</Text>
+          <Text className="">{props.time}</Text>
         </View>
       </CardContent>
       <CardFooter>

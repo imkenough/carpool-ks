@@ -1,5 +1,5 @@
 import '@/global.css';
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NAV_THEME } from '@/lib/theme';
 import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
@@ -14,12 +14,15 @@ export {
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+  const queryClient = new QueryClient();
 
   return (
+    <QueryClientProvider client={queryClient}>
     <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <Slot />
       <PortalHost />
     </ThemeProvider>
+    </QueryClientProvider>
   );
 }
