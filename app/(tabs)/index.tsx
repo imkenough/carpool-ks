@@ -111,11 +111,25 @@ export default function Screen() {
             <Text>Find Rides</Text>
           </Button>
         )}
-        <View className='h-4'/>
-        <Button
-            onPress={() => {postRide({ name: 'kenny', destination: travelDirection, from: location });}}>
+        <View className="h-4" />
+        {disable === 'idle' ? (
+          <Button
+            onPress={() => {
+              console.log(date);
+              postRide({
+                name: 'haaaa',
+                destination: travelDirection,
+                from: location,
+                date: date,
+              });
+            }}>
             <Text>Post Rides </Text>
           </Button>
+        ) : (
+          <Button disabled>
+            <Text>Post Rides</Text>
+          </Button>
+        )}
       </View>
     </>
   );

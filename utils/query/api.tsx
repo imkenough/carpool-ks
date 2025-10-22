@@ -1,58 +1,77 @@
 // src/hooks/useProfiles.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../supabase'; // your initialized Supabase client
+import { supabase } from '../supabase';
 import { CardParams } from '@/components/mycard';
 
-// Fetch rides filtered by destination AND from
-const fetchRides = async (destination: string, from: string ): Promise<CardParams[]> => {
+// --------------------
+// Fetch functions
+// --------------------
+
+// Fetch rides filtered by destination and from
+const fetchRides = async (destination: string, from: string): Promise<CardParams[]> => {
   const { data, error } = await supabase
     .from('Rides')
     .select('*')
     .eq('destination', destination)
-    .eq('from', from); // filter both fields
+    .eq('from', from);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data ?? [];
 };
 
-const postRide = async (name: string, destination: string, from: string): Promise<void> => {
-  const { data, error } = await supabase
-    .from('Rides')
-    .insert([{ name, destination, from }]);
-
+// Fetch all rides (no filters)
+const fetchAllRides = async (): Promise<CardParams[]> => {
+  const { data, error } = await supabase.from('Rides').select('*');
   if (error) throw new Error(error.message);
-
-  console.log('Ride posted successfully:', data);
+  return data ?? [];
 };
 
+// Add a new ride
+const postRide = async (ride: {
+  name: string;
+  destination: string;
+  from: string;
+  date: Date;
+}): Promise<void> => {
+  const { error } = await supabase.from('Rides').insert([ride]);
+  if (error) throw new Error(error.message);
+};
 
-// Custom hook using TanStack Query
-export const getRides = (destination: string, from: string) => {
+// --------------------
+// React Query Hooks
+// --------------------
+
+// Get rides filtered by destination and from
+export const useRides = (destination: string, from: string) => {
   return useQuery<CardParams[], Error>({
-    queryKey: ['rides', { destination, from }], // cache per filter combo
+    queryKey: ['rides', destination, from],
     queryFn: () => fetchRides(destination, from),
-    staleTime: 1000 * 60 * 5, // optional: cache for 5 minutes
+    enabled: Boolean(destination && from), // avoids running query with empty filters
+    staleTime: 1000 * 60 * 5,
   });
 };
 
-// ✅ Custom hook to post rides (MUTATION)
+// Get all rides
+export const useAllRides = () => {
+  return useQuery<CardParams[], Error>({
+    queryKey: ['rides', 'all'],
+    queryFn: fetchAllRides,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+// Post a new ride (mutation)
 export const usePostRide = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ name, destination, from }: { name: string; destination: string; from: string }) =>
-      postRide(name, destination, from ),
-
-    // Invalidate or refetch rides after posting
+    mutationFn: postRide,
     onSuccess: () => {
+      // Invalidate both filtered and all ride queries
       queryClient.invalidateQueries({ queryKey: ['rides'] });
     },
-
-    onError: (error) => {
-      console.error('Error posting ride:', error);
+    onError: (error: Error) => {
+      console.error('❌ Error posting ride:', error.message);
     },
   });
 };

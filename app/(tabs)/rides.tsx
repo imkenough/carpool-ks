@@ -8,7 +8,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 
 import { getFakeCardData } from '@/lib/fake-card-data';
-import { getRides } from '@/utils/query/api';
+import { useAllRides } from '@/utils/query/api';
 
 export default function RidesScreen() {
   const { travelDirection, location } = useLocalSearchParams() as {
@@ -16,8 +16,8 @@ export default function RidesScreen() {
     location: string;
   };
   const { date } = useDate();
-  const {data : database } = getRides( 'to-college' , 'airport' )
-  console.log(database)
+  const { data: database } = useAllRides();
+
   const [filtersCleared, setFiltersCleared] = React.useState(false);
 
   useFocusEffect(
@@ -65,7 +65,7 @@ export default function RidesScreen() {
           </Button>
         </View>
       )}
-      <View>
+      <View className="mb-21s">
         <FlatList
           data={database}
           showsVerticalScrollIndicator={false}
@@ -76,7 +76,6 @@ export default function RidesScreen() {
                 name={item.name}
                 destination={item.destination}
                 date={item.date}
-                time={item.time}
                 from={item.from}
               />
             );
