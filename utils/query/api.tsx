@@ -8,12 +8,38 @@ import { CardParams } from '@/components/mycard';
 // --------------------
 
 // Fetch rides filtered by destination and from
-const fetchRides = async (destination: string, from: string): Promise<CardParams[]> => {
+const fetchRides = async (
+  destination: string,
+  from: string,
+  date: Date,
+  time?: [number, number, number, number] | null
+): Promise<CardParams[]> => {
+  
+  // 2. If 'time' is null or undefined, default to [0, 0, 0, 0]
+  const hoursToSet = time || [0, 0, 0, 0];
+
+  // 3. Create the start of the day
+  const startDate = new Date(date);
+  // 4. Use the spread operator (...) to pass the array as arguments
+  startDate.setHours(...hoursToSet);
+
+  // 5. Create the end date (start of the next day)
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setHours(0, 0, 0, 0);
+
+  // 6. Convert to ISO strings for Supabase
+  const startDateString = startDate.toISOString();
+  const endDateString = endDate.toISOString();
+
   const { data, error } = await supabase
     .from('Rides')
     .select('*')
     .eq('destination', destination)
-    .eq('from', from);
+    .eq('from', from)
+    // Find all records from the specified time until the end of the day
+    .gte('date', startDateString) // >= start time
+    .lt('date', endDateString);  // < start of next day
 
   if (error) throw new Error(error.message);
   return data ?? [];
@@ -42,10 +68,10 @@ const postRide = async (ride: {
 // --------------------
 
 // Get rides filtered by destination and from
-export const useRides = (destination: string, from: string) => {
+export const useRides = (destination: string, from: string, date : Date , time?: [number, number, number, number] | null) => {
   return useQuery<CardParams[], Error>({
-    queryKey: ['rides', destination, from],
-    queryFn: () => fetchRides(destination, from),
+    queryKey: ['rides', destination, from , date, time],
+    queryFn: () => fetchRides(destination, from, date, time),
     enabled: Boolean(destination && from), // avoids running query with empty filters
     staleTime: 1000 * 60 * 5,
   });
