@@ -3,34 +3,35 @@ import { View, FlatList } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
-import { MyCard, CardParams } from '@/components/mycard'; // Assuming CardParams defines the shape of a ride item
-// import { useDate } from '@/lib/date-context'; // No longer used, date comes from params
+import { MyCard, CardParams } from '@/components/mycard';
 import { useAllRides, useRides } from '@/utils/query/api';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card';
 
-// Define types for your screen parameters for better type-safety
 type RideScreenParams = {
   travelDirection?: string;
   location?: string;
-  date?: string; // Date comes as a string from URL params
+  date?: string;
 };
 
-/**
- * A dedicated header component for cleaner logic in the main screen.
- */
 const RidesListHeader = ({
   filtersApplied,
   date,
   onClearFilters,
 }: {
   filtersApplied: boolean;
-  date: Date; // This component correctly receives a Date object
+  date: Date;
   onClearFilters: () => void;
 }) => {
   if (filtersApplied) {
     return (
       <View className="my-4 flex-row items-center justify-between">
         <Text className="shrink text-lg font-bold" accessible>
-          {/* Check if date is valid before trying to format it */}
           Displaying rides on {date.toLocaleDateString()}
         </Text>
         <Button onPress={onClearFilters} variant="outline">
@@ -43,21 +44,33 @@ const RidesListHeader = ({
   return <Text className="my-4 text-lg font-bold">Showing all rides</Text>;
 };
 
-/**
- * A simple spacer component for the list footer.
- */
 const ListFooter = () => <View className="h-[20px]" />;
 
-/**
- * Main screen component for displaying rides.
- */
+const RideCardSkeleton = () => (
+  <Card className="my-1.5 w-full max-w-sm">
+    <CardHeader>
+      <Skeleton className="h-6 w-3/4" />
+      <Skeleton className="mt-2 h-4 w-1/2" />
+    </CardHeader>
+    <CardContent>
+      <View className="flex flex-row items-center">
+        <Skeleton className="h-4 w-1/4" />
+        <Skeleton className="ml-2 h-4 w-1/2" />
+      </View>
+      <View className="mt-2 flex flex-row items-center">
+        <Skeleton className="h-4 w-1/4" />
+        <Skeleton className="ml-2 h-4 w-1/2" />
+      </View>
+    </CardContent>
+    <CardFooter>
+      <Skeleton className="h-10 w-full" />
+    </CardFooter>
+  </Card>
+);
+
 export default function RidesScreen() {
   const { travelDirection, location, date: dateString } = useLocalSearchParams<RideScreenParams>();
 
-  // Safely create the date object.
-  // If dateString is not provided in the URL, default to the current date.
-  // new Date(undefined) or new Date('') results in "Invalid Date".
-  // This logic ensures 'traveldate' is always a valid Date.
   const traveldate = React.useMemo(
     () => new Date(dateString || new Date()),
     [dateString]
@@ -65,25 +78,20 @@ export default function RidesScreen() {
 
   const [filtersCleared, setFiltersCleared] = React.useState(false);
 
-  // Determine if filter parameters were actually provided
   const hasFilterParams = !!travelDirection && !!location && !!dateString;
 
-  // Filters are considered active only if params exist AND the user hasn't cleared them
   const filtersApplied = hasFilterParams && !filtersCleared;
 
-  // Fetch data based on whether filters are currently active
-  const { data: database } = filtersApplied
-    ? useRides(travelDirection!, location!, traveldate) // Use filtered hook
-    : useAllRides(); // Use general hook
+  const { data: database, isLoading } = filtersApplied
+    ? useRides(travelDirection!, location!, traveldate)
+    : useAllRides();
 
-  // Reset the 'cleared' state every time the screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       setFiltersCleared(false);
     }, [])
   );
 
-  // Memoize the renderItem function for FlatList performance
   const renderItem = React.useCallback(
     ({ item }: { item: CardParams }) => (
       <MyCard
@@ -97,25 +105,33 @@ export default function RidesScreen() {
     []
   );
 
-  // Memoize the keyExtractor function for FlatList performance
   const keyExtractor = React.useCallback((item: CardParams) => item.id.toString(), []);
 
   return (
     <View className="flex-1 px-4">
       <RidesListHeader
         filtersApplied={filtersApplied}
-        date={traveldate} // 'traveldate' is guaranteed to be a valid Date
+        date={traveldate}
         onClearFilters={() => setFiltersCleared(true)}
       />
-      <FlatList
-        data={database}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        showsVerticalScrollIndicator={false}
-        className="flex-1"
-        // Use ListFooterComponent for bottom spacing instead of an extra View
-        ListFooterComponent={ListFooter}
-      />
+      {isLoading ? (
+        <FlatList
+          data={[1, 2, 3, 4, 5]}
+          renderItem={() => <RideCardSkeleton />}
+          keyExtractor={(item) => item.toString()}
+          showsVerticalScrollIndicator={false}
+          className="flex-1"
+        />
+      ) : (
+        <FlatList
+          data={database}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          showsVerticalScrollIndicator={false}
+          className="flex-1"
+          ListFooterComponent={ListFooter}
+        />
+      )}
     </View>
   );
 }
