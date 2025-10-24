@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { MyCard, CardParams } from '@/components/mycard';
 import { useAllRides, usePostRide, useRides } from '@/utils/query/api';
+import { useAllRides, useRides, useRidesByDate } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
@@ -158,6 +159,20 @@ export default function RidesScreen() {
     ? useRides(travelDirection!, location!, traveldate)
     : useAllRides();
 
+  const hasLocationFilters = !!travelDirection && !!location;
+  const isDateFilterPresent = !!dateString;
+
+  let queryResult;
+  if (hasLocationFilters && !filtersCleared) {
+    queryResult = useRides(travelDirection!, location!, traveldate);
+  } else if (isDateFilterPresent && !filtersCleared) {
+    queryResult = useRidesByDate(traveldate);
+  } else {
+    queryResult = useAllRides();
+  }
+
+  const { data: database, isLoading } = queryResult;
+
   useFocusEffect(
     React.useCallback(() => {
       setFiltersCleared(false);
@@ -185,7 +200,7 @@ export default function RidesScreen() {
   return (
     <View className="flex-1 px-4">
       <RidesListHeader
-        filtersApplied={filtersApplied}
+        filtersApplied={isDateFilterPresent && !filtersCleared}
         date={traveldate}
         onClearFilters={() => setFiltersCleared(true)}
       />
