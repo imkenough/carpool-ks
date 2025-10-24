@@ -14,7 +14,6 @@ const fetchRides = async (
   date: Date,
   time?: [number, number, number, number] | null
 ): Promise<CardParams[]> => {
-  
   // 2. If 'time' is null or undefined, default to [0, 0, 0, 0]
   const hoursToSet = time || [0, 0, 0, 0];
 
@@ -39,7 +38,7 @@ const fetchRides = async (
     .eq('from', from)
     // Find all records from the specified time until the end of the day
     .gte('date', startDateString) // >= start time
-    .lt('date', endDateString);  // < start of next day
+    .lt('date', endDateString); // < start of next day
 
   if (error) throw new Error(error.message);
   return data ?? [];
@@ -48,6 +47,26 @@ const fetchRides = async (
 // Fetch all rides (no filters)
 const fetchAllRides = async (): Promise<CardParams[]> => {
   const { data, error } = await supabase.from('Rides').select('*');
+  if (error) throw new Error(error.message);
+  return data ?? [];
+};
+
+const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0); // Set to the beginning of the day
+
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1); // Set to the beginning of the next day
+
+  const startDateString = startDate.toISOString();
+  const endDateString = endDate.toISOString();
+
+  const { data, error } = await supabase
+    .from('Rides')
+    .select('*')
+    .gte('date', startDateString)
+    .lt('date', endDateString);
+
   if (error) throw new Error(error.message);
   return data ?? [];
 };
@@ -68,9 +87,14 @@ const postRide = async (ride: {
 // --------------------
 
 // Get rides filtered by destination and from
-export const useRides = (destination: string, from: string, date : Date , time?: [number, number, number, number] | null) => {
+export const useRides = (
+  destination: string,
+  from: string,
+  date: Date,
+  time?: [number, number, number, number] | null
+) => {
   return useQuery<CardParams[], Error>({
-    queryKey: ['rides', destination, from , date, time],
+    queryKey: ['rides', destination, from, date, time],
     queryFn: () => fetchRides(destination, from, date, time),
     enabled: Boolean(destination && from), // avoids running query with empty filters
     staleTime: 1000 * 60 * 5,
@@ -82,6 +106,15 @@ export const useAllRides = () => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'all'],
     queryFn: fetchAllRides,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useRidesByDate = (date: Date) => {
+  return useQuery<CardParams[], Error>({
+    queryKey: ['rides', 'byDate', date],
+    queryFn: () => fetchRidesByDate(date),
+    enabled: Boolean(date),
     staleTime: 1000 * 60 * 5,
   });
 };

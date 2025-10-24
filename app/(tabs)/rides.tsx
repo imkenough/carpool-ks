@@ -4,7 +4,7 @@ import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { MyCard, CardParams } from '@/components/mycard';
-import { useAllRides, useRides } from '@/utils/query/api';
+import { useAllRides, useRides, useRidesByDate } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
@@ -78,13 +78,19 @@ export default function RidesScreen() {
 
   const [filtersCleared, setFiltersCleared] = React.useState(false);
 
-  const hasFilterParams = !!travelDirection && !!location && !!dateString;
+  const hasLocationFilters = !!travelDirection && !!location;
+  const isDateFilterPresent = !!dateString;
 
-  const filtersApplied = hasFilterParams && !filtersCleared;
+  let queryResult;
+  if (hasLocationFilters && !filtersCleared) {
+    queryResult = useRides(travelDirection!, location!, traveldate);
+  } else if (isDateFilterPresent && !filtersCleared) {
+    queryResult = useRidesByDate(traveldate);
+  } else {
+    queryResult = useAllRides();
+  }
 
-  const { data: database, isLoading } = filtersApplied
-    ? useRides(travelDirection!, location!, traveldate)
-    : useAllRides();
+  const { data: database, isLoading } = queryResult;
 
   useFocusEffect(
     React.useCallback(() => {
@@ -110,7 +116,7 @@ export default function RidesScreen() {
   return (
     <View className="flex-1 px-4">
       <RidesListHeader
-        filtersApplied={filtersApplied}
+        filtersApplied={isDateFilterPresent && !filtersCleared}
         date={traveldate}
         onClearFilters={() => setFiltersCleared(true)}
       />

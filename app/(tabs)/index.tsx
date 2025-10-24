@@ -65,11 +65,7 @@ export default function Screen() {
         <Text className="mb-4" variant="h4">
           Create a Ride Request
         </Text>
-        <ButtonGroup
-          options={travelOptions}
-          value={destination}
-          onValueChange={setDestination}
-        />
+        <ButtonGroup options={travelOptions} value={destination} onValueChange={setDestination} />
 
         <View className="my-2" />
 
@@ -111,11 +107,10 @@ export default function Screen() {
 
         <Button
           disabled={isFindDisabled}
-          
           onPress={() => {
             router.push({
               pathname: '/rides',
-              params: { travelDirection: destination, location: rideLocation , date : date.toString() },
+              params: { date : date.toString() },
             });
           }}>
           <Text>Find Rides</Text>
@@ -126,11 +121,12 @@ export default function Screen() {
         <Button
           disabled={isPostDisabled}
           onPress={() => {
-            
+            const finalDestination = destination === 'to-college' ? 'college' : rideLocation;
+            const finalFrom = destination === 'to-college' ? rideLocation : 'college';
             postRide({
-              name: 'haaaa', // TODO: Replace hardcoded name
-              destination: destination,
-              from: rideLocation,
+              name: 'testest', // TODO: Replace hardcoded name
+              destination: finalDestination,
+              from: finalFrom,
               date: date,
             });
           }}>
