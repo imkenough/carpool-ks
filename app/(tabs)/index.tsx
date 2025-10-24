@@ -24,7 +24,7 @@ const locationOptions = [
 const locationLayout = [['airport', 'station'], ['custom']];
 
 export default function Screen() {
-  const [travelDirection, setTravelDirection] = React.useState('to-college');
+  const [destination, setDestination] = React.useState('to-college');
   const [location, setLocation] = React.useState('airport');
   const [customLocation, setCustomLocation] = React.useState('');
   const [debouncedCustomLocation, setDebouncedCustomLocation] = React.useState('');
@@ -44,7 +44,7 @@ export default function Screen() {
   }, [customLocation]);
 
   const locationTitle =
-    travelDirection === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
+    destination === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
 
   // Calculate the final location value
   const rideLocation = location === 'custom' ? debouncedCustomLocation.trim() : location;
@@ -67,8 +67,8 @@ export default function Screen() {
         </Text>
         <ButtonGroup
           options={travelOptions}
-          value={travelDirection}
-          onValueChange={setTravelDirection}
+          value={destination}
+          onValueChange={setDestination}
         />
 
         <View className="my-2" />
@@ -111,10 +111,11 @@ export default function Screen() {
 
         <Button
           disabled={isFindDisabled}
+          
           onPress={() => {
             router.push({
               pathname: '/rides',
-              params: { travelDirection, location: rideLocation },
+              params: { travelDirection: destination, location: rideLocation , date : date.toString() },
             });
           }}>
           <Text>Find Rides</Text>
@@ -125,10 +126,10 @@ export default function Screen() {
         <Button
           disabled={isPostDisabled}
           onPress={() => {
-            console.log(date);
+            
             postRide({
               name: 'haaaa', // TODO: Replace hardcoded name
-              destination: travelDirection,
+              destination: destination,
               from: rideLocation,
               date: date,
             });
