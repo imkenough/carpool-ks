@@ -123,23 +123,7 @@ export default function Screen() {
 
         <View className="h-4" />
 
-        <Button
-          disabled={isPostDisabled}
-          onPress={() => {
-            
-            postRide({
-              name: 'haaaa', // TODO: Replace hardcoded name
-              destination: destination,
-              from: rideLocation,
-              date: date,
-            });
-          }}>
-          {isPending ? (
-            <Loader2 className="animate-spin text-foreground" />
-          ) : (
-            <Text>Post Ride</Text>
-          )}
-        </Button>
+        
       </View>
     </>
   );

@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { View, FlatList } from 'react-native';
+import { View, FlatList, Alert } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { MyCard, CardParams } from '@/components/mycard';
-import { useAllRides, useRides } from '@/utils/query/api';
+import { useAllRides, usePostRide, useRides } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
@@ -12,13 +12,16 @@ import {
   CardFooter,
   CardHeader,
 } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react-native';
 
+/* -------------------- TYPES -------------------- */
 type RideScreenParams = {
   travelDirection?: string;
   location?: string;
   date?: string;
 };
 
+/* -------------------- HEADER -------------------- */
 const RidesListHeader = ({
   filtersApplied,
   date,
@@ -44,6 +47,7 @@ const RidesListHeader = ({
   return <Text className="my-4 text-lg font-bold">Showing all rides</Text>;
 };
 
+/* -------------------- SKELETON -------------------- */
 const ListFooter = () => <View className="h-[20px]" />;
 
 const RideCardSkeleton = () => (
@@ -68,8 +72,76 @@ const RideCardSkeleton = () => (
   </Card>
 );
 
+/* -------------------- POST BUTTON -------------------- */
+const PostRideUi = ({
+  travelDirection,
+  location,
+  traveldate,
+  postRide,
+  isPending,
+}: {
+  travelDirection?: string;
+  location?: string;
+  traveldate: Date;
+  postRide: (data: any) => void;
+  isPending: boolean;
+}) => {
+  const handlePress = () => {
+    if (!travelDirection || !location || !traveldate) {
+      Alert.alert('Missing Information', 'Please find the rides in home page first.');
+      return;
+    }
+
+    const formattedDate = new Date(traveldate).toLocaleDateString();
+    const formatedTime = new Date(traveldate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+    Alert.alert(
+      'Confirm Ride',
+      `Are you sure you want to post this ride?\n\n📅 Date & Time: ${formattedDate} Time :  ${formatedTime}`,
+
+
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes',
+          onPress: () => {
+            postRide({
+              name: 'haaaa', // TODO: Replace hardcoded name
+              destination: travelDirection,
+              from: location,
+              date: traveldate,
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <>
+      <View className="h-[20px]" />
+      <Text className="mb-4 mt-4" variant="h3">
+        Can’t find a ride?
+      </Text>
+      <Text className="mb-4" variant="h4">
+        Post a ride yourself
+      </Text>
+      <Button onPress={handlePress}>
+        {isPending ? (
+          <Loader2 className="animate-spin text-foreground" />
+        ) : (
+          <Text>Post Ride</Text>
+        )}
+      </Button>
+      <View className='h-[20px]' />
+    </>
+  );
+};
+
+/* -------------------- MAIN SCREEN -------------------- */
 export default function RidesScreen() {
-  const { travelDirection, location, date: dateString } = useLocalSearchParams<RideScreenParams>();
+  const { travelDirection, location, date: dateString } =
+    useLocalSearchParams<RideScreenParams>();
 
   const traveldate = React.useMemo(
     () => new Date(dateString || new Date()),
@@ -77,10 +149,10 @@ export default function RidesScreen() {
   );
 
   const [filtersCleared, setFiltersCleared] = React.useState(false);
-
   const hasFilterParams = !!travelDirection && !!location && !!dateString;
-
   const filtersApplied = hasFilterParams && !filtersCleared;
+
+  const { mutate: postRide, isPending } = usePostRide();
 
   const { data: database, isLoading } = filtersApplied
     ? useRides(travelDirection!, location!, traveldate)
@@ -105,7 +177,10 @@ export default function RidesScreen() {
     []
   );
 
-  const keyExtractor = React.useCallback((item: CardParams) => item.id.toString(), []);
+  const keyExtractor = React.useCallback(
+    (item: CardParams) => item.id.toString(),
+    []
+  );
 
   return (
     <View className="flex-1 px-4">
@@ -114,6 +189,7 @@ export default function RidesScreen() {
         date={traveldate}
         onClearFilters={() => setFiltersCleared(true)}
       />
+
       {isLoading ? (
         <FlatList
           data={[1, 2, 3, 4, 5]}
@@ -132,6 +208,17 @@ export default function RidesScreen() {
           ListFooterComponent={ListFooter}
         />
       )}
+
+
+
+      {/* ✅ Post Button outside the main function */}
+      <PostRideUi
+        travelDirection={travelDirection}
+        location={location}
+        traveldate={traveldate}
+        postRide={postRide}
+        isPending={isPending}
+      />
     </View>
   );
 }
