@@ -6,12 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MyCard, CardParams } from '@/components/mycard';
 import { useAllRides, usePostRide, useRides } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react-native';
 
 /* -------------------- TYPES -------------------- */
@@ -72,7 +67,7 @@ const RideCardSkeleton = () => (
   </Card>
 );
 
-/* -------------------- POST BUTTON -------------------- */
+/* -------------------- POST rednder UI-------------------- */
 const PostRideUi = ({
   travelDirection,
   location,
@@ -93,12 +88,14 @@ const PostRideUi = ({
     }
 
     const formattedDate = new Date(traveldate).toLocaleDateString();
-    const formatedTime = new Date(traveldate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    const formatedTime = new Date(traveldate).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
     Alert.alert(
       'Confirm Ride',
       `Are you sure you want to post this ride?\n\n📅 Date & Time: ${formattedDate} Time :  ${formatedTime}`,
-
 
       [
         { text: 'No', style: 'cancel' },
@@ -127,13 +124,9 @@ const PostRideUi = ({
         Post a ride yourself
       </Text>
       <Button onPress={handlePress}>
-        {isPending ? (
-          <Loader2 className="animate-spin text-foreground" />
-        ) : (
-          <Text>Post Ride</Text>
-        )}
+        {isPending ? <Loader2 className="animate-spin text-foreground" /> : <Text>Post Ride</Text>}
       </Button>
-      <View className='h-[20px]' />
+      <View className="h-[20px]" />
     </>
   );
 };
@@ -143,10 +136,7 @@ export default function RidesScreen() {
   const { travelDirection, location, date: dateString } =
     useLocalSearchParams<RideScreenParams>();
 
-  const traveldate = React.useMemo(
-    () => new Date(dateString || new Date()),
-    [dateString]
-  );
+  const traveldate = React.useMemo(() => new Date(dateString || new Date()), [dateString]);
 
   const [filtersCleared, setFiltersCleared] = React.useState(false);
   const hasFilterParams = !!travelDirection && !!location && !!dateString;
@@ -157,6 +147,9 @@ export default function RidesScreen() {
   const { data: database, isLoading } = filtersApplied
     ? useRides(travelDirection!, location!, traveldate)
     : useAllRides();
+
+  const hasLocationFilters = !!travelDirection && !!location;
+  const isDateFilterPresent = !!dateString;
 
   useFocusEffect(
     React.useCallback(() => {
@@ -185,7 +178,7 @@ export default function RidesScreen() {
   return (
     <View className="flex-1 px-4">
       <RidesListHeader
-        filtersApplied={filtersApplied}
+        filtersApplied={isDateFilterPresent && !filtersCleared}
         date={traveldate}
         onClearFilters={() => setFiltersCleared(true)}
       />
@@ -208,8 +201,6 @@ export default function RidesScreen() {
           ListFooterComponent={ListFooter}
         />
       )}
-
-
 
       {/* ✅ Post Button outside the main function */}
       <PostRideUi

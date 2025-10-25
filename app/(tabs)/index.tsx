@@ -16,16 +16,16 @@ const travelOptions = [
 ];
 
 const locationOptions = [
-  { label: 'Airport', value: 'airport' },
-  { label: 'Station', value: 'station' },
+  { label: 'Airport', value: 'Airport' },
+  { label: 'Station', value: 'Station' },
   { label: 'Custom', value: 'custom' },
 ];
 
-const locationLayout = [['airport', 'station'], ['custom']];
+const locationLayout = [['Airport', 'Station'], ['custom']];
 
 export default function Screen() {
   const [destination, setDestination] = React.useState('to-college');
-  const [location, setLocation] = React.useState('airport');
+  const [location, setLocation] = React.useState('Airport');
   const [customLocation, setCustomLocation] = React.useState('');
   const [debouncedCustomLocation, setDebouncedCustomLocation] = React.useState('');
   const { date, setDate } = useDate();
@@ -65,11 +65,7 @@ export default function Screen() {
         <Text className="mb-4" variant="h4">
           Create a Ride Request
         </Text>
-        <ButtonGroup
-          options={travelOptions}
-          value={destination}
-          onValueChange={setDestination}
-        />
+        <ButtonGroup options={travelOptions} value={destination} onValueChange={setDestination} />
 
         <View className="my-2" />
 
@@ -111,19 +107,22 @@ export default function Screen() {
 
         <Button
           disabled={isFindDisabled}
-          
           onPress={() => {
+            const finalDestination = destination === 'to-college' ? 'college' : rideLocation;
+            const finalFrom = destination === 'to-college' ? rideLocation : 'college';
             router.push({
               pathname: '/rides',
-              params: { travelDirection: destination, location: rideLocation , date : date.toString() },
+              params: {
+                date: date.toString(),
+                travelDirection: finalDestination,
+                location: finalFrom,
+              },
             });
           }}>
           <Text>Find Rides</Text>
         </Button>
 
         <View className="h-4" />
-
-        
       </View>
     </>
   );
