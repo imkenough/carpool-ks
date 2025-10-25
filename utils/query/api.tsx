@@ -3,75 +3,88 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 import { CardParams } from '@/components/mycard';
 
-// --------------------
-// Fetch functions
-// --------------------
+// =============================================================================
+// FETCH FUNCTIONS - Database operations for rides
+// =============================================================================
 
-// Fetch rides filtered by destination and from
+/**
+ * Fetches rides filtered by destination, origin, date, and optional time range
+ * @param destination - The destination location
+ * @param from - The origin location
+ * @param date - The target date
+ * @param time - Optional time range [hours, minutes, seconds, milliseconds]
+ * @returns Array of rides matching the criteria
+ */
 const fetchRides = async (
   destination: string,
   from: string,
   date: Date,
   time?: [number, number, number, number] | null
 ): Promise<CardParams[]> => {
-  // 2. If 'time' is null or undefined, default to [0, 0, 0, 0]
+  // Default to midnight if no specific time provided
   const hoursToSet = time || [0, 0, 0, 0];
 
-  // 3. Create the start of the day
+  // Set start time based on the provided date and time
   const startDate = new Date(date);
-  // 4. Use the spread operator (...) to pass the array as arguments
   startDate.setHours(...hoursToSet);
 
-  // 5. Create the end date (start of the next day)
+  // Calculate end time (start of next day at midnight)
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 1);
   endDate.setHours(0, 0, 0, 0);
 
-  // 6. Convert to ISO strings for Supabase
-  const startDateString = startDate.toISOString();
-  const endDateString = endDate.toISOString();
-
+  // Query rides within the time range
   const { data, error } = await supabase
     .from('Rides')
     .select('*')
     .eq('destination', destination)
     .eq('from', from)
-    // Find all records from the specified time until the end of the day
-    .gte('date', startDateString) // >= start time
-    .lt('date', endDateString); // < start of next day
+    .gte('date', startDate.toISOString()) // Greater than or equal to start
+    .lt('date', endDate.toISOString()); // Less than end (exclusive)
 
   if (error) throw new Error(error.message);
   return data ?? [];
 };
 
-// Fetch all rides (no filters)
+/**
+ * Fetches all rides without any filters
+ * @returns Array of all rides in the database
+ */
 const fetchAllRides = async (): Promise<CardParams[]> => {
   const { data, error } = await supabase.from('Rides').select('*');
   if (error) throw new Error(error.message);
   return data ?? [];
 };
 
+/**
+ * Fetches rides for a specific date (entire day from midnight to midnight)
+ * @param date - The target date
+ * @returns Array of rides on that date
+ */
 const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
+  // Set to start of day (midnight)
   const startDate = new Date(date);
-  startDate.setHours(0, 0, 0, 0); // Set to the beginning of the day
+  startDate.setHours(0, 0, 0, 0);
 
+  // Set to start of next day (midnight)
   const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 1); // Set to the beginning of the next day
+  endDate.setDate(endDate.getDate() + 1);
 
-  const startDateString = startDate.toISOString();
-  const endDateString = endDate.toISOString();
-
+  // Query rides within the full day
   const { data, error } = await supabase
     .from('Rides')
     .select('*')
-    .gte('date', startDateString)
-    .lt('date', endDateString);
+    .gte('date', startDate.toISOString())
+    .lt('date', endDate.toISOString());
 
   if (error) throw new Error(error.message);
   return data ?? [];
 };
 
-// Add a new ride
+/**
+ * Adds a new ride to the database
+ * @param ride - The ride object containing name, destination, from, and date
+ */
 const postRide = async (ride: {
   name: string;
   destination: string;
@@ -82,11 +95,14 @@ const postRide = async (ride: {
   if (error) throw new Error(error.message);
 };
 
-// --------------------
-// React Query Hooks
-// --------------------
+// =============================================================================
+// REACT QUERY HOOKS - Custom hooks for data fetching and mutations
+// =============================================================================
 
-// Get rides filtered by destination and from
+/**
+ * Hook to fetch rides with filters (destination, origin, date, and optional time)
+ * Only executes when both destination and origin are provided
+ */
 export const useRides = (
   destination: string,
   from: string,
@@ -96,37 +112,47 @@ export const useRides = (
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', destination, from, date, time],
     queryFn: () => fetchRides(destination, from, date, time),
-    enabled: Boolean(destination && from), // avoids running query with empty filters
-    staleTime: 1000 * 60 * 5,
+    enabled: Boolean(destination && from), // Prevent unnecessary queries
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
-// Get all rides
+/**
+ * Hook to fetch all rides without filters
+ * Useful for displaying all available rides
+ */
 export const useAllRides = () => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'all'],
     queryFn: fetchAllRides,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
+/**
+ * Hook to fetch rides for a specific date
+ * Only executes when a valid date is provided
+ */
 export const useRidesByDate = (date: Date) => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'byDate', date],
     queryFn: () => fetchRidesByDate(date),
-    enabled: Boolean(date),
-    staleTime: 1000 * 60 * 5,
+    enabled: Boolean(date), // Prevent query with invalid date
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
-// Post a new ride (mutation)
+/**
+ * Hook to create a new ride (mutation)
+ * Automatically invalidates all ride queries on success to refresh data
+ */
 export const usePostRide = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: postRide,
     onSuccess: () => {
-      // Invalidate both filtered and all ride queries
+      // Refresh all ride queries to show the new ride
       queryClient.invalidateQueries({ queryKey: ['rides'] });
     },
     onError: (error: Error) => {

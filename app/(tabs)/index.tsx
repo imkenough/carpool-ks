@@ -57,8 +57,7 @@ export default function Screen() {
 
   // Combine disabled states for clarity
   const isFindDisabled = isPickerSpinning || isCustomLocationInvalid;
-  const isPostDisabled = isPickerSpinning || isCustomLocationInvalid || isPending;
-
+  
   return (
     <>
       <View className="flex-1 p-4">
@@ -108,8 +107,8 @@ export default function Screen() {
         <Button
           disabled={isFindDisabled}
           onPress={() => {
-            const finalDestination = destination === 'to-college' ? 'college' : rideLocation;
-            const finalFrom = destination === 'to-college' ? rideLocation : 'college';
+            const finalDestination = destination === 'to-college' ? 'College' : rideLocation;
+            const finalFrom = destination === 'to-college' ? rideLocation : 'College';
             router.push({
               pathname: '/rides',
               params: {
