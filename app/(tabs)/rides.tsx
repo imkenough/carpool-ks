@@ -8,6 +8,17 @@ import { useAllRides, usePostRide, useRides } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react-native';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 /* -------------------- TYPES -------------------- */
 type RideScreenParams = {
@@ -17,35 +28,37 @@ type RideScreenParams = {
 };
 
 /* -------------------- HEADER -------------------- */
-const RidesListHeader = ({
-  filtersApplied,
-  date,
-  onClearFilters,
-}: {
-  filtersApplied: boolean;
-  date: Date;
-  onClearFilters: () => void;
-}) => {
-  if (filtersApplied) {
-    return (
-      <View className="my-4 flex-row items-center justify-between">
-        <Text className="shrink text-lg font-bold" accessible>
-          Displaying rides on {date.toLocaleDateString()}
-        </Text>
-        <Button onPress={onClearFilters} variant="outline">
-          <Text>Clear</Text>
-        </Button>
-      </View>
-    );
+const RidesListHeader = React.memo(
+  ({
+    filtersApplied,
+    date,
+    onClearFilters,
+  }: {
+    filtersApplied: boolean;
+    date: Date;
+    onClearFilters: () => void;
+  }) => {
+    if (filtersApplied) {
+      return (
+        <View className="my-4 flex-row items-center justify-between">
+          <Text className="shrink text-lg font-bold" accessible>
+            Displaying rides on {date.toLocaleDateString()}
+          </Text>
+          <Button onPress={onClearFilters} variant="outline">
+            <Text>Clear</Text>
+          </Button>
+        </View>
+      );
+    }
+
+    return <Text className="my-4 text-lg font-bold">Showing all rides</Text>;
   }
+);
 
-  return <Text className="my-4 text-lg font-bold">Showing all rides</Text>;
-};
-
-/* -------------------- SKELETON -------------------- */
+/* -------------------- SKELETON & FOOTER -------------------- */
 const ListFooter = () => <View className="h-[20px]" />;
 
-const RideCardSkeleton = () => (
+const RideCardSkeleton = React.memo(() => (
   <Card className="my-1.5 w-full max-w-sm">
     <CardHeader>
       <Skeleton className="h-6 w-3/4" />
@@ -65,98 +78,131 @@ const RideCardSkeleton = () => (
       <Skeleton className="h-10 w-full" />
     </CardFooter>
   </Card>
-);
+));
 
-/* -------------------- POST rednder UI-------------------- */
-const PostRideUi = ({
-  travelDirection,
-  location,
-  traveldate,
-  postRide,
-  isPending,
-}: {
-  travelDirection?: string;
-  location?: string;
-  traveldate: Date;
-  postRide: (data: any) => void;
-  isPending: boolean;
-}) => {
-  const handlePress = () => {
-    if (!travelDirection || !location || !traveldate) {
-      Alert.alert('Missing Information', 'Please find the rides in home page first.');
-      return;
-    }
+/* -------------------- POST RIDE UI -------------------- */
+const PostRideUi = React.memo(
+  ({
+    travelDirection,
+    location,
+    traveldate,
+    postRide,
+    isPending,
+  }: {
+    travelDirection?: string;
+    location?: string;
+    traveldate: Date;
+    postRide: (data: any) => void;
+    isPending: boolean;
+  }) => {
+    // Check if we have the necessary data to post a ride
+    const canPost = !!travelDirection && !!location && !!traveldate;
 
-    const formattedDate = new Date(traveldate).toLocaleDateString();
-    const formatedTime = new Date(traveldate).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    Alert.alert(
-      'Confirm Ride',
-      `Are you sure you want to post this ride?\n\n📅 Date & Time: ${formattedDate} Time :  ${formatedTime}`,
-
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes',
-          onPress: () => {
-            postRide({
-              name: 'haaaa', // TODO: Replace hardcoded name
-              destination: travelDirection,
-              from: location,
-              date: traveldate,
-            });
-          },
-        },
-      ]
+    // Memoize formatted strings to avoid recalculating on every render
+    const formattedDate = React.useMemo(
+      () => traveldate.toLocaleDateString(),
+      [traveldate]
     );
-  };
+    const formatedTime = React.useMemo(
+      () =>
+        traveldate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      [traveldate]
+    );
 
-  return (
-    <>
-      <View className="h-[20px]" />
-      <Text className="mb-4 mt-4" variant="h3">
-        Can’t find a ride?
-      </Text>
-      <Text className="mb-4" variant="h4">
-        Post a ride yourself
-      </Text>
-      <Button onPress={handlePress}>
-        {isPending ? <Loader2 className="animate-spin text-foreground" /> : <Text>Post Ride</Text>}
-      </Button>
-      <View className="h-[20px]" />
-    </>
-  );
-};
+    const handlePress = () => {
+      postRide({
+        name: 'haaaa', // TODO: Replace hardcoded name with actual user name from auth
+        destination: travelDirection,
+        from: location,
+        date: traveldate,
+      });
+    };
+
+    return (
+      <>
+        <View className="h-[20px]" />
+        <Text className="mb-4 mt-4" variant="h3">
+          Can’t find a ride?
+        </Text>
+        <Text className="mb-4" variant="h4">
+          Post a ride yourself
+        </Text>
+       {!canPost && <Text className='mb-2' variant={'destructive'}> Find rides in home to post a rides </Text>}
+        {/* Alert Box */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button disabled={!canPost || isPending}>
+              {isPending ? (
+                <Loader2 className="animate-spin text-foreground" />
+              ) : (
+                <Text>Post Ride</Text>
+              )}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Do you want to post this ride?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                We will be posting a ride from {location} to {travelDirection} on{' '}
+                {formattedDate} at {formatedTime}.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                <Text>Cancel</Text>
+              </AlertDialogCancel>
+              <AlertDialogAction onPress={handlePress}>
+                <Text>Continue</Text>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <View className="h-[20px]" />
+      </>
+    );
+  }
+);
 
 /* -------------------- MAIN SCREEN -------------------- */
 export default function RidesScreen() {
-  const { travelDirection, location, date: dateString } =
-    useLocalSearchParams<RideScreenParams>();
+  const {
+    travelDirection,
+    location,
+    date: dateString,
+  } = useLocalSearchParams<RideScreenParams>();
 
-  const traveldate = React.useMemo(() => new Date(dateString || new Date()), [dateString]);
+  // Memoize the traveldate object
+  const traveldate = React.useMemo(
+    () => new Date(dateString || Date.now()),
+    [dateString]
+  );
 
+  // --- Filter Logic ---
   const [filtersCleared, setFiltersCleared] = React.useState(false);
+  // Check if all required filter params are present
   const hasFilterParams = !!travelDirection && !!location && !!dateString;
+  // Filters are applied if params exist AND the user hasn't cleared them
   const filtersApplied = hasFilterParams && !filtersCleared;
 
+  // --- Data Fetching ---
   const { mutate: postRide, isPending } = usePostRide();
-
   const { data: database, isLoading } = filtersApplied
     ? useRides(travelDirection!, location!, traveldate)
     : useAllRides();
 
-  const hasLocationFilters = !!travelDirection && !!location;
-  const isDateFilterPresent = !!dateString;
-
+  // Reset filter state when the screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       setFiltersCleared(false);
     }, [])
   );
 
+  // --- FlatList Optimization ---
   const renderItem = React.useCallback(
     ({ item }: { item: CardParams }) => (
       <MyCard
@@ -175,18 +221,25 @@ export default function RidesScreen() {
     []
   );
 
+  const renderSkeletonItem = React.useCallback(
+    () => <RideCardSkeleton />,
+    []
+  );
+  const skeletonData = React.useMemo(() => [1, 2, 3, 4, 5], []);
+
   return (
     <View className="flex-1 px-4">
+      
       <RidesListHeader
-        filtersApplied={isDateFilterPresent && !filtersCleared}
+        filtersApplied={filtersApplied}
         date={traveldate}
         onClearFilters={() => setFiltersCleared(true)}
       />
 
       {isLoading ? (
         <FlatList
-          data={[1, 2, 3, 4, 5]}
-          renderItem={() => <RideCardSkeleton />}
+          data={skeletonData}
+          renderItem={renderSkeletonItem}
           keyExtractor={(item) => item.toString()}
           showsVerticalScrollIndicator={false}
           className="flex-1"
@@ -195,14 +248,16 @@ export default function RidesScreen() {
         <FlatList
           data={database}
           renderItem={renderItem}
-          keyExtractor={keyExtractor}
+          keyExtractor={keyExtractor} 
           showsVerticalScrollIndicator={false}
           className="flex-1"
           ListFooterComponent={ListFooter}
+          // You might want to add a ListEmptyComponent here
+          // ListEmptyComponent={<Text>No rides found.</Text>}
         />
       )}
 
-      {/* ✅ Post Button outside the main function */}
+      {/* Post Button UI */}
       <PostRideUi
         travelDirection={travelDirection}
         location={location}
