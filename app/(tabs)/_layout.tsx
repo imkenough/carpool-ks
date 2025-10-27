@@ -13,7 +13,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Carpool',
+            title: 'Home',
             headerShadowVisible: false,
             headerStyle: { backgroundColor: 'hsl(var(--background))' },
             headerRight: () => <ThemeToggle />,

@@ -40,7 +40,7 @@ const RidesListHeader = React.memo(
   }) => {
     if (filtersApplied) {
       return (
-        <View className="my-4 flex-row items-center justify-between">
+        <View className="my-4 flex-row items-center justify-between px-4">
           <Text className="shrink text-lg font-bold" accessible>
             Displaying rides on {date.toLocaleDateString()}
           </Text>
@@ -51,7 +51,7 @@ const RidesListHeader = React.memo(
       );
     }
 
-    return <Text className="my-4 text-lg font-bold">Showing all rides</Text>;
+    return <Text className="my-4 px-4 text-lg font-bold">Showing all rides</Text>;
   }
 );
 
@@ -99,10 +99,7 @@ const PostRideUi = React.memo(
     const canPost = !!travelDirection && !!location && !!traveldate;
 
     // Memoize formatted strings to avoid recalculating on every render
-    const formattedDate = React.useMemo(
-      () => traveldate.toLocaleDateString(),
-      [traveldate]
-    );
+    const formattedDate = React.useMemo(() => traveldate.toLocaleDateString(), [traveldate]);
     const formatedTime = React.useMemo(
       () =>
         traveldate.toLocaleTimeString('en-US', {
@@ -122,15 +119,19 @@ const PostRideUi = React.memo(
     };
 
     return (
-      <>
-        <View className="h-[20px]" />
-        <Text className="mb-4 mt-4" variant="h3">
-          Can’t find a ride?
+      <View className="my-2.5 rounded-2xl border border-white/20 bg-black/80 p-4 backdrop-blur-xl">
+        <Text className="mb-4 mt-4" variant="h4">
+          Can't find a ride? Post a ride yourself
         </Text>
-        <Text className="mb-4" variant="h4">
+        {/* <Text className="mb-4" variant="">
           Post a ride yourself
-        </Text>
-       {!canPost && <Text className='mb-2' variant={'destructive'}> Find rides in home to post a rides </Text>}
+        </Text> */}
+        {!canPost && (
+          <Text className="mb-4" variant="destructive">
+            {' '}
+            Find rides in home to post a rides{' '}
+          </Text>
+        )}
         {/* Alert Box */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -144,12 +145,10 @@ const PostRideUi = React.memo(
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                Do you want to post this ride?
-              </AlertDialogTitle>
+              <AlertDialogTitle>Do you want to post this ride?</AlertDialogTitle>
               <AlertDialogDescription>
-                We will be posting a ride from {location} to {travelDirection} on{' '}
-                {formattedDate} at {formatedTime}.
+                We will be posting a ride from {location} to {travelDirection} on {formattedDate} at{' '}
+                {formatedTime}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -163,24 +162,17 @@ const PostRideUi = React.memo(
           </AlertDialogContent>
         </AlertDialog>
         <View className="h-[20px]" />
-      </>
+      </View>
     );
   }
 );
 
 /* -------------------- MAIN SCREEN -------------------- */
 export default function RidesScreen() {
-  const {
-    travelDirection,
-    location,
-    date: dateString,
-  } = useLocalSearchParams<RideScreenParams>();
+  const { travelDirection, location, date: dateString } = useLocalSearchParams<RideScreenParams>();
 
   // Memoize the traveldate object
-  const traveldate = React.useMemo(
-    () => new Date(dateString || Date.now()),
-    [dateString]
-  );
+  const traveldate = React.useMemo(() => new Date(dateString || Date.now()), [dateString]);
 
   // --- Filter Logic ---
   const [filtersCleared, setFiltersCleared] = React.useState(false);
@@ -216,20 +208,13 @@ export default function RidesScreen() {
     []
   );
 
-  const keyExtractor = React.useCallback(
-    (item: CardParams) => item.id.toString(),
-    []
-  );
+  const keyExtractor = React.useCallback((item: CardParams) => item.id.toString(), []);
 
-  const renderSkeletonItem = React.useCallback(
-    () => <RideCardSkeleton />,
-    []
-  );
+  const renderSkeletonItem = React.useCallback(() => <RideCardSkeleton />, []);
   const skeletonData = React.useMemo(() => [1, 2, 3, 4, 5], []);
 
   return (
-    <View className="flex-1 px-4">
-      
+    <View className="flex-1">
       <RidesListHeader
         filtersApplied={filtersApplied}
         date={traveldate}
@@ -242,15 +227,15 @@ export default function RidesScreen() {
           renderItem={renderSkeletonItem}
           keyExtractor={(item) => item.toString()}
           showsVerticalScrollIndicator={false}
-          className="flex-1"
+          className="flex-1 px-4 pb-52"
         />
       ) : (
         <FlatList
           data={database}
           renderItem={renderItem}
-          keyExtractor={keyExtractor} 
+          keyExtractor={keyExtractor}
           showsVerticalScrollIndicator={false}
-          className="flex-1"
+          className="flex-1 px-4 pb-52"
           ListFooterComponent={ListFooter}
           // You might want to add a ListEmptyComponent here
           // ListEmptyComponent={<Text>No rides found.</Text>}
@@ -258,13 +243,15 @@ export default function RidesScreen() {
       )}
 
       {/* Post Button UI */}
-      <PostRideUi
-        travelDirection={travelDirection}
-        location={location}
-        traveldate={traveldate}
-        postRide={postRide}
-        isPending={isPending}
-      />
+      <View className="absolute bottom-0 left-0 right-0 z-10 px-4">
+        <PostRideUi
+          travelDirection={travelDirection}
+          location={location}
+          traveldate={traveldate}
+          postRide={postRide}
+          isPending={isPending}
+        />
+      </View>
     </View>
   );
 }
