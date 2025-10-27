@@ -1,14 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useRouter } from 'expo-router';
-import { Loader2 } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
-import { usePostRide } from '@/utils/query/api';
+
 
 const travelOptions = [
   { label: 'Going to College', value: 'to-college' },
@@ -18,10 +17,11 @@ const travelOptions = [
 const locationOptions = [
   { label: 'Airport', value: 'Airport' },
   { label: 'Station', value: 'Station' },
+  { label: 'City', value: 'City' },
   { label: 'Custom', value: 'custom' },
 ];
 
-const locationLayout = [['Airport', 'Station'], ['custom']];
+const locationLayout = [['Airport', 'Station', 'City'], ['custom']];
 
 export default function Screen() {
   const [destination, setDestination] = React.useState('to-college');
@@ -109,7 +109,7 @@ export default function Screen() {
         </View>
         
         {isPastDate(date) && <Text  className='my-2' variant={'destructive'}>Can't find rides that are in the past</Text>}
-        
+
         <View className="mb-4" />
         
 
