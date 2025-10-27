@@ -10,9 +10,14 @@ import * as React from 'react';
 import { Platform, Pressable, type TextInput, View } from 'react-native';
 
 export function SignUpForm() {
+ 
   const router = useRouter();
   const passwordInputRef = React.useRef<TextInput>(null);
   const platform = Platform.OS == 'ios';
+
+   const handelSignup = ()=>{
+    
+  }
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
@@ -51,7 +56,7 @@ export function SignUpForm() {
           <SocialConnections />
           <View className="flex-row items-center justify-center gap-x-1">
             <Text className="text-sm text-muted-foreground">Already have an account?</Text>
-            <Pressable onPress={() => router.replace('/auth/sign-in')}>
+            <Pressable onPress={() => router.replace('../auth/sign-in')}>
               <Text className="text-sm font-semibold text-primary">Sign In </Text>
             </Pressable>
           </View>

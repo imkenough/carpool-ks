@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useColorScheme } from 'nativewind';
 import { Image, Platform, View } from 'react-native';
+import { useGoogleSignIn } from '@/utils/query/signin-signup';
 
 // Define the base social connection strategies
 const BASE_SOCIAL_CONNECTION_STRATEGIES = [
@@ -40,6 +41,8 @@ const SOCIAL_CONNECTION_STRATEGIES = [
 
 export function SocialConnections() {
   const { colorScheme } = useColorScheme();
+  const { mutate: handleGoogleSignup, isPending, error } = useGoogleSignIn()
+ 
 
   return (
     <View className="gap-2 sm:flex-row sm:gap-3">
@@ -50,9 +53,7 @@ export function SocialConnections() {
             variant="outline"
             size="sm"
             className="sm:flex-1"
-            onPress={() => {
-              // TODO: Authenticate with social provider and navigate to protected screen if successful
-            }}>
+            onPress={() =>  handleGoogleSignup()}>
             <Image
               className={cn('size-4', strategy.useTint && Platform.select({ web: 'dark:invert' }))}
               tintColor={Platform.select({
