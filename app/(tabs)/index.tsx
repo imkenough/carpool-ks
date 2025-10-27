@@ -31,7 +31,7 @@ export default function Screen() {
   const { date, setDate } = useDate();
   const router = useRouter();
   const [pickerState, setPickerState] = React.useState<'idle' | 'spinning'>('idle');
-  const { mutate: postRide, isPending } = usePostRide();
+  const [minDate] = React.useState(new Date());
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -42,6 +42,12 @@ export default function Screen() {
       clearTimeout(handler);
     };
   }, [customLocation]);
+
+  
+
+  
+  const isPastDate = (date: Date): boolean => date < minDate;
+  
 
   const locationTitle =
     destination === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
@@ -56,7 +62,7 @@ export default function Screen() {
   const isCustomLocationInvalid = location === 'custom' && rideLocation === '';
 
   // Combine disabled states for clarity
-  const isFindDisabled = isPickerSpinning || isCustomLocationInvalid;
+  const isFindDisabled = isPickerSpinning || isCustomLocationInvalid || isPastDate(date);
   
   return (
     <>
@@ -101,8 +107,11 @@ export default function Screen() {
             onStateChange={(val) => setPickerState(val)}
           />
         </View>
-
+        
+        {isPastDate(date) && <Text  className='my-2' variant={'destructive'}>Can't find rides that are in the past</Text>}
+        
         <View className="mb-4" />
+        
 
         <Button
           disabled={isFindDisabled}
