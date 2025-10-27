@@ -43,11 +43,11 @@ export default function Screen() {
     };
   }, [customLocation]);
 
-  
 
-  
+
+
   const isPastDate = (date: Date): boolean => date < minDate;
-  
+
 
   const locationTitle =
     destination === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
@@ -63,7 +63,7 @@ export default function Screen() {
 
   // Combine disabled states for clarity
   const isFindDisabled = isPickerSpinning || isCustomLocationInvalid || isPastDate(date);
-  
+
   return (
     <>
       <View className="flex-1 p-4">
@@ -107,11 +107,11 @@ export default function Screen() {
             onStateChange={(val) => setPickerState(val)}
           />
         </View>
-        
-        {isPastDate(date) && <Text  className='my-2' variant={'destructive'}>Can't find rides that are in the past</Text>}
+
+        {isPastDate(date) && <Text className='my-2' variant={'destructive'}>Can't find rides that are in the past</Text>}
 
         <View className="mb-4" />
-        
+
 
         <Button
           disabled={isFindDisabled}

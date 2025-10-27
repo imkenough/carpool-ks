@@ -48,7 +48,7 @@ const RidesListHeader = React.memo(
         </View>
       );
     }
-
+    
     return <Text className="my-4 px-4 text-lg font-bold">Showing all rides</Text>;
   }
 );

@@ -35,7 +35,7 @@ const fetchRides = async (
 
   // Query rides within the time range
   const { data, error } = await supabase
-    .from('Rides')
+    .from('rides')
     .select('*')
     .eq('destination', destination)
     .eq('from', from)
@@ -51,7 +51,7 @@ const fetchRides = async (
  * @returns Array of all rides in the database
  */
 const fetchAllRides = async (): Promise<CardParams[]> => {
-  const { data, error } = await supabase.from('Rides').select('*');
+  const { data, error } = await supabase.from('rides').select('*');
   if (error) throw new Error(error.message);
   return data ?? [];
 };
@@ -72,7 +72,7 @@ const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
 
   // Query rides within the full day
   const { data, error } = await supabase
-    .from('Rides')
+    .from('rides')
     .select('*')
     .gte('date', startDate.toISOString())
     .lt('date', endDate.toISOString());
@@ -91,7 +91,7 @@ const postRide = async (ride: {
   from: string;
   date: Date;
 }): Promise<void> => {
-  const { error } = await supabase.from('Rides').insert([ride]);
+  const { error } = await supabase.from('rides').insert([ride]);
   if (error) throw new Error(error.message);
 };
 
