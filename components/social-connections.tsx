@@ -3,22 +3,39 @@ import { Button } from '@/components/ui/button';
 import { useColorScheme } from 'nativewind';
 import { Image, Platform, View } from 'react-native';
 
-const SOCIAL_CONNECTION_STRATEGIES = [
-  {
-    type: 'oauth_apple',
-    source: { uri: 'https://img.clerk.com/static/apple.png?width=160' },
-    useTint: true,
-  },
+// Define the base social connection strategies
+const BASE_SOCIAL_CONNECTION_STRATEGIES = [
   {
     type: 'oauth_google',
     source: { uri: 'https://img.clerk.com/static/google.png?width=160' },
     useTint: false,
   },
-  {
-    type: 'oauth_github',
-    source: { uri: 'https://img.clerk.com/static/github.png?width=160' },
-    useTint: true,
-  },
+  // Add other common strategies here if needed
+  // {
+  //   type: 'oauth_github',
+  //   source: { uri: 'https://img.clerk.com/static/github.png?width=160' },
+  //   useTint: true,
+  // },
+];
+
+// Define platform-specific strategies
+const PLATFORM_SPECIFIC_STRATEGIES = Platform.select({
+  ios: [
+    {
+      type: 'oauth_apple',
+      source: { uri: 'https://img.clerk.com/static/apple.png?width=160' },
+      useTint: true,
+    },
+  ],
+  // Add other platform-specific strategies if needed
+  // android: [ ... ],
+  // web: [ ... ],
+});
+
+// Combine base and platform-specific strategies
+const SOCIAL_CONNECTION_STRATEGIES = [
+  ...(PLATFORM_SPECIFIC_STRATEGIES || []), // Include platform-specific if they exist
+  ...BASE_SOCIAL_CONNECTION_STRATEGIES,
 ];
 
 export function SocialConnections() {

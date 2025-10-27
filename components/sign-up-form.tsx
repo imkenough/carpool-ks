@@ -7,11 +7,12 @@ import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Platform, Pressable, type TextInput, View } from 'react-native';
 
 export function SignUpForm() {
   const router = useRouter();
   const passwordInputRef = React.useRef<TextInput>(null);
+  const platform = Platform.OS == 'ios';
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
@@ -25,58 +26,35 @@ export function SignUpForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Create your account</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">Sign up to Carpool</CardTitle>
           <CardDescription className="text-center sm:text-left">
-            Welcome! Please fill in the details to get started.
+            Welcome! Please Enter your details and click SSO
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
-          <View className="gap-6">
-            <View className="gap-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="m@example.com"
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onSubmitEditing={onEmailSubmitEditing}
-                returnKeyType="next"
-                submitBehavior="submit"
-              />
-            </View>
-            <View className="gap-1.5">
-              <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
-              </View>
-              <Input
-                ref={passwordInputRef}
-                id="password"
-                secureTextEntry
-                returnKeyType="send"
-                onSubmitEditing={onSubmit}
-              />
-            </View>
-            <Button className="w-full" onPress={onSubmit}>
-              <Text>Continue</Text>
-            </Button>
+          <View className="flex-row items-center rounded-md border border-input">
+            <Text className="pl-3 text-muted-foreground">+91</Text>
+            <Input
+              className="flex-1 border-0 bg-transparent"
+              returnKeyType="send"
+              keyboardType="numeric"
+              placeholder="Phone Number"
+              maxLength={10}
+            />
           </View>
-          <Text className="text-muted-foreground text-center text-sm">
-            Already have an account?{' '}
-            <Text
-              className="text-primary underline"
-              onPress={() => {
-                router.push('/auth/sign-in');
-              }}>
-              Sign in
-            </Text>
-          </Text>
-          {/* <View className="flex-row items-center">
-            <Separator className="flex-1" />
-            <Text className="px-4 text-sm text-muted-foreground">or</Text>
-            <Separator className="flex-1" />
+          <Input
+            returnKeyType="send"
+            keyboardType="default"
+            placeholder="Name"
+            autoCapitalize="words"
+          />
+          <SocialConnections />
+          <View className="flex-row items-center justify-center gap-x-1">
+            <Text className="text-sm text-muted-foreground">Already have an account?</Text>
+            <Pressable onPress={() => router.replace('/auth/sign-in')}>
+              <Text className="text-sm font-semibold text-primary">Sign In </Text>
+            </Pressable>
           </View>
-          <SocialConnections /> */}
         </CardContent>
       </Card>
     </View>

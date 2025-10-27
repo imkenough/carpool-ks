@@ -7,11 +7,12 @@ import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
-import { Pressable, type TextInput, View } from 'react-native';
+import { Platform, Pressable, type TextInput, View } from 'react-native';
 
 export function SignInForm() {
   const router = useRouter();
   const passwordInputRef = React.useRef<TextInput>(null);
+  const platform = Platform.OS == 'ios';
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
@@ -25,67 +26,35 @@ export function SignInForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Sign in to your app</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">Sign in to Carpool</CardTitle>
           <CardDescription className="text-center sm:text-left">
             Welcome back! Please sign in to continue
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
-          <View className="gap-6">
-            <View className="gap-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="m@example.com"
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onSubmitEditing={onEmailSubmitEditing}
-                returnKeyType="next"
-                submitBehavior="submit"
-              />
-            </View>
-            <View className="gap-1.5">
-              <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="ml-auto h-4 px-1 py-0 web:h-fit sm:h-4"
-                  onPress={() => {
-                    // TODO: Navigate to forgot password screen
-                  }}>
-                  <Text className="font-normal leading-4">Forgot your password?</Text>
-                </Button>
-              </View>
-              <Input
-                ref={passwordInputRef}
-                id="password"
-                secureTextEntry
-                returnKeyType="send"
-                onSubmitEditing={onSubmit}
-              />
-            </View>
-            <Button className="w-full" onPress={onSubmit}>
-              <Text>Continue</Text>
-            </Button>
+          {/* <View className="flex-row items-center rounded-md border border-input">
+            <Text className="pl-3 text-muted-foreground">+91</Text>
+            <Input
+              className="flex-1 border-0 bg-transparent"
+              returnKeyType="send"
+              keyboardType="numeric"
+              placeholder="Phone Number"
+              maxLength={10}
+            />
           </View>
-          <Text className="text-muted-foreground text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Text
-              className="text-primary underline"
-              onPress={() => {
-                router.push('/auth/sign-up');
-              }}>
-              Sign up
-            </Text>
-          </Text>
-          {/* <View className="flex-row items-center">
-            <Separator className="flex-1" />
-            <Text className="text-muted-foreground px-4 text-sm">or</Text>
-            <Separator className="flex-1" />
+          <Input
+            returnKeyType="send"
+            keyboardType="default"
+            placeholder="Name"
+            autoCapitalize="words"
+          /> */}
+          <SocialConnections />
+          <View className="flex-row items-center justify-center gap-x-1">
+            <Text className="text-sm text-muted-foreground">Already have an account?</Text>
+            <Pressable onPress={() => router.replace('/auth/sign-up')}>
+              <Text className="text-sm font-semibold text-primary">Sign Up </Text>
+            </Pressable>
           </View>
-          <SocialConnections /> */}
         </CardContent>
       </Card>
     </View>
