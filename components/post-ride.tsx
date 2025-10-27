@@ -56,8 +56,8 @@ const PostRideUi = React.memo(
             <View
                 className="
                 my-2.5 rounded-2xl border p-4 backdrop-blur-xl shadow-xl 
-                bg-white/80 border-black/40 shadow-black 
-                dark:bg-black/80 dark:border-white/40 dark:shadow-white"  >
+                bg-white/85 border-black/40 shadow-black 
+                dark:bg-black/85 dark:border-white/40 dark:shadow-white"  >
                     
                 <Text className="mb-4 mt-4" variant="h4">
                     Can't find a ride? Post a ride yourself
