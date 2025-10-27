@@ -1,20 +1,16 @@
 import { SocialConnections } from '@/components/social-connections';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
+import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
 export function SignUpForm() {
+  const router = useRouter();
   const passwordInputRef = React.useRef<TextInput>(null);
 
   function onEmailSubmitEditing() {
@@ -27,7 +23,7 @@ export function SignUpForm() {
 
   return (
     <View className="gap-6">
-      <Card className="border-border/0 sm:border-border shadow-none sm:shadow-sm sm:shadow-black/5">
+      <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-center text-xl sm:text-left">Create your account</CardTitle>
           <CardDescription className="text-center sm:text-left">
@@ -65,21 +61,22 @@ export function SignUpForm() {
               <Text>Continue</Text>
             </Button>
           </View>
-          <Text className="text-center text-sm">
+          <Text className="text-muted-foreground text-center text-sm">
             Already have an account?{' '}
-            <Pressable
+            <Text
+              className="text-primary underline"
               onPress={() => {
-                // TODO: Navigate to sign in screen
+                router.push('/auth/sign-in');
               }}>
-              <Text className="text-sm underline underline-offset-4">Sign in</Text>
-            </Pressable>
+              Sign in
+            </Text>
           </Text>
-          <View className="flex-row items-center">
+          {/* <View className="flex-row items-center">
             <Separator className="flex-1" />
-            <Text className="text-muted-foreground px-4 text-sm">or</Text>
+            <Text className="px-4 text-sm text-muted-foreground">or</Text>
             <Separator className="flex-1" />
           </View>
-          <SocialConnections />
+          <SocialConnections /> */}
         </CardContent>
       </Card>
     </View>
