@@ -30,14 +30,18 @@ async function googleSignin() {
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
     
     // 2. Get user info from Google
+    // This line is failing because your webClientId is wrong.
     const userInfo = await GoogleSignin.signIn();
 
-    // 3. Check for the ID token (FIXED: it's userInfo.idToken, not userInfo.data.idToken)
-    if (userInfo.data?.idToken) {
-      // 4. Sign in to Supabase
+    // 3. This line is where your console.log was, it's never reached
+    console.log('✅ Google UserInfo:', userInfo); 
+    
+    // 4. CHECK FOR THE ID TOKEN (THIS IS THE FIX)
+    if (userInfo.data?.idToken) { 
+      // 5. Sign in to Supabase
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
-        token: userInfo.data.idToken,
+        token: userInfo.data.idToken, // Use userInfo.idToken directly
       });
 
       if (error) {
@@ -51,9 +55,15 @@ async function googleSignin() {
     }
   } catch (error: any) {
     // 5. Improved Error Handling
+    
+    // --- THIS IS WHERE YOUR CODE IS GOING ---
+    console.error('--- GOOGLE SIGN-IN FAILED ---');
+    console.error('Error Code:', error.code);
+    console.error('Error Message:', error.message);
+    console.error('-----------------------------');
+
     if (error.code === statusCodes.SIGN_IN_CANCELLED) {
       console.log('Google Sign-In cancelled by user.');
-      // Don't throw an error, just return null as the user cancelled
       return null; 
     } else if (error.code === statusCodes.IN_PROGRESS) {
       console.warn('Google Sign-In is already in progress.');
@@ -62,8 +72,7 @@ async function googleSignin() {
       Alert.alert('Error', 'Google Play Services is not available or outdated.');
       throw new Error('Play Services not available.');
     } else {
-      // Some other unknown error
-      console.error('Google Sign-In Error:', error.message, error.code);
+      // This is likely the error you are seeing (e.g., DEVELOPER_ERROR or code 10)
       throw new Error(error.message || 'An unknown error occurred during sign-in.');
     }
   }
