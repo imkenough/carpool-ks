@@ -50,7 +50,7 @@ export function SignInForm() {
           /> */}
           <SocialConnections />
           <View className="flex-row items-center justify-center gap-x-1">
-            <Text className="text-sm text-muted-foreground">Already have an account?</Text>
+            <Text className="text-sm text-muted-foreground">temporary development links - </Text>
             <Pressable onPress={() => router.replace('../auth/sign-up')}>
               <Text className="text-sm font-semibold text-primary">Sign Up </Text>
             </Pressable>
