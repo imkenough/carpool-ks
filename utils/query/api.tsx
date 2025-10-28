@@ -35,10 +35,10 @@ const fetchRides = async (
 
   // Query rides within the time range
   const { data, error } = await supabase
-    .from('Rides')
+    .from('rides')
     .select('*')
-    .eq('destination', destination)
-    .eq('from', from)
+    .ilike('destination', `%${destination}%`)
+    .ilike('from', `%${from}%`)
     .gte('date', startDate.toISOString()) // Greater than or equal to start
     .lt('date', endDate.toISOString()); // Less than end (exclusive)
 
@@ -51,7 +51,7 @@ const fetchRides = async (
  * @returns Array of all rides in the database
  */
 const fetchAllRides = async (): Promise<CardParams[]> => {
-  const { data, error } = await supabase.from('Rides').select('*');
+  const { data, error } = await supabase.from('rides').select('*');
   if (error) throw new Error(error.message);
   return data ?? [];
 };
@@ -72,7 +72,7 @@ const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
 
   // Query rides within the full day
   const { data, error } = await supabase
-    .from('Rides')
+    .from('rides')
     .select('*')
     .gte('date', startDate.toISOString())
     .lt('date', endDate.toISOString());
@@ -86,13 +86,38 @@ const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
  * @param ride - The ride object containing name, destination, from, and date
  */
 const postRide = async (ride: {
-  name: string;
   destination: string;
   from: string;
   date: Date;
 }): Promise<void> => {
-  const { error } = await supabase.from('Rides').insert([ride]);
-  if (error) throw new Error(error.message);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('User not authenticated. Cannot post ride.');
+  }
+
+  // Fetch the user's full_name from their profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile?.full_name) {
+    throw new Error('Could not find user profile or name. Please complete your profile.');
+  }
+
+  // Construct the new ride object with the user's name
+  const newRide = {
+    ...ride,
+    user_id: user.id,
+    name: profile.full_name, // Use the name from the profile
+  };
+
+  const { error } = await supabase.from('rides').insert([newRide]);
+  if (error) {
+    throw new Error(error.message);
+  }
 };
 
 // =============================================================================
@@ -156,6 +181,7 @@ export const usePostRide = () => {
       queryClient.invalidateQueries({ queryKey: ['rides'] });
     },
     onError: (error: Error) => {
+      Alert.alert('Error', error.message);
       console.error('❌ Error posting ride:', error.message);
     },
   });

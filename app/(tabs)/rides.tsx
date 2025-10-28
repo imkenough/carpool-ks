@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, FlatList, Alert } from 'react-native';
+import { View, FlatList, Alert, RefreshControl } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,14 @@ const RidesListHeader = React.memo(
 /* -------------------- SKELETON & FOOTER -------------------- */
 const ListFooter = () => <View className="h-[20px]" />;
 
+const RidesListEmpty = () => (
+  <View className="flex-1 items-center justify-center py-24">
+    <Text className="text-lg text-muted-foreground">No rides found.</Text>
+    <Text className="text-sm text-muted-foreground">
+      Try adjusting your search or check back later.
+    </Text>
+  </View>
+);
 const RideCardSkeleton = React.memo(() => (
   <Card className="my-1.5 w-full max-w-sm">
     <CardHeader>
@@ -111,16 +119,15 @@ const PostRideUi = React.memo(
 
     const handlePress = () => {
       postRide({
-        name: 'haaaa', // TODO: Replace hardcoded name with actual user name from auth
-        destination: travelDirection,
-        from: location,
+        destination: travelDirection!,
+        from: location!,
         date: traveldate,
       });
     };
 
     return (
-      <View className="my-2.5 rounded-2xl border border-white/20 bg-black/80 p-4 backdrop-blur-xl">
-        <Text className="mb-4 mt-4" variant="h4">
+      <View className="my-2.5 rounded-2xl border border-white/20 bg-black/80 px-6 py-6 backdrop-blur-xl">
+        <Text className="mb-4" variant="h4">
           Can't find a ride? Post a ride yourself
         </Text>
         {/* <Text className="mb-4" variant="">
@@ -161,7 +168,6 @@ const PostRideUi = React.memo(
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <View className="h-[20px]" />
       </View>
     );
   }
@@ -183,9 +189,16 @@ export default function RidesScreen() {
 
   // --- Data Fetching ---
   const { mutate: postRide, isPending } = usePostRide();
-  const { data: database, isLoading } = filtersApplied
-    ? useRides(travelDirection!, location!, traveldate)
-    : useAllRides();
+  const {
+    data: database,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = filtersApplied ? useRides(travelDirection!, location!, traveldate) : useAllRides();
+
+  const onRefresh = React.useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Reset filter state when the screen comes into focus
   useFocusEffect(
@@ -236,22 +249,19 @@ export default function RidesScreen() {
           keyExtractor={keyExtractor}
           showsVerticalScrollIndicator={false}
           className="flex-1 px-4 pb-52"
-          ListFooterComponent={ListFooter}
-          // You might want to add a ListEmptyComponent here
-          // ListEmptyComponent={<Text>No rides found.</Text>}
+          ListFooterComponent={
+            <PostRideUi
+              travelDirection={travelDirection}
+              location={location}
+              traveldate={traveldate}
+              postRide={postRide}
+              isPending={isPending}
+            />
+          }
+          ListEmptyComponent={RidesListEmpty}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />}
         />
       )}
-
-      {/* Post Button UI */}
-      <View className="absolute bottom-0 left-0 right-0 z-10 px-4">
-        <PostRideUi
-          travelDirection={travelDirection}
-          location={location}
-          traveldate={traveldate}
-          postRide={postRide}
-          isPending={isPending}
-        />
-      </View>
     </View>
   );
 }

@@ -6,6 +6,7 @@ import {
 import { supabase } from '../supabase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 
 // Configure this once when your app starts!
 GoogleSignin.configure({
@@ -47,6 +48,34 @@ async function googleSignin() {
       if (error) {
         throw new Error(error.message);
       }
+
+      if (data.user) {
+        const { error: upsertError } = await supabase.from('profiles').upsert({
+          id: data.user.id,
+          avatar_url: userInfo.data.user.photo,
+          updated_at: new Date().toISOString(),
+        });
+
+        if (upsertError) {
+          throw new Error(`Failed to save user profile: ${upsertError.message}`);
+        }
+
+        // Check if the user's profile is complete
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name, phone_number')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          // PGRST116 means no row was found, which is expected for new users
+          throw new Error(`Failed to check user profile: ${profileError.message}`);
+        }
+
+        const isProfileComplete = !!(profile?.full_name && profile?.phone_number);
+
+        return { ...data, isProfileComplete };
+      }
       
       // Successfully signed in
       return data;
@@ -85,18 +114,22 @@ async function googleSignin() {
  */
 export const useGoogleSignIn = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: googleSignin,
     onSuccess: (data) => {
       if (data) {
-        // Invalidate queries that depend on the user's auth state
-        // 'user' or 'session' is more common than 'signin'
         queryClient.invalidateQueries({ queryKey: ['user'] });
         queryClient.invalidateQueries({ queryKey: ['session'] });
         console.log('✅ Google Sign-In Successful');
+
+        if (data.isProfileComplete) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('../auth/sign-up');
+        }
       }
-      // If data is null (e.g., user cancelled), we don't need to do anything
     },
     onError: (error: Error) => {
       // Show user-facing alert

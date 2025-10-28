@@ -48,21 +48,26 @@ export function SocialConnections() {
     <View className="gap-2 sm:flex-row sm:gap-3">
       {SOCIAL_CONNECTION_STRATEGIES.map((strategy) => {
         return (
-          <Button
-            key={strategy.type}
-            variant="outline"
-            size="sm"
-            className="sm:flex-1"
-            onPress={() =>  handleGoogleSignup()}>
-            <Image
-              className={cn('size-4', strategy.useTint && Platform.select({ web: 'dark:invert' }))}
-              tintColor={Platform.select({
-                native: strategy.useTint ? (colorScheme === 'dark' ? 'white' : 'black') : undefined,
-              })}
-              source={strategy.source}
-            />
-          </Button>
-        );
+                    <Button
+                      key={strategy.type}
+                      variant="outline"
+                      size="sm"
+                      className="sm:flex-1"
+                      onPress={() => {
+                        if (strategy.type === 'oauth_google') {
+                          handleGoogleSignup();
+                        }
+                      }}
+                      loading={strategy.type === 'oauth_google' && isPending}
+                    >
+                      <Image
+                        className={cn('size-4', strategy.useTint && Platform.select({ web: 'dark:invert' }))}
+                        tintColor={Platform.select({
+                          native: strategy.useTint ? (colorScheme === 'dark' ? 'white' : 'black') : undefined,
+                        })}
+                        source={strategy.source}
+                      />
+                    </Button>        );
       })}
     </View>
   );
