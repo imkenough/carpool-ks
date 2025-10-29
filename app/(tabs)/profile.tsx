@@ -18,6 +18,7 @@ import { supabase } from '@/utils/supabase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import loginStore from '@/utils/states/login-zus';
+import { performLogout } from '@/utils/local-storage/islogin';
 
 export default function ProfileScreen() {
   const [userName, setUserName] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export default function ProfileScreen() {
   const [fullName, setFullName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { logout, initializeAuth } = loginStore();
+  const { logout } = loginStore();
   const router = useRouter();
 
   async function fetchUserName() {
@@ -58,12 +59,13 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     fetchUserName();
-    initializeAuth()
+    
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-     await logout()
+    logout()
+    await performLogout()
     router.replace('/auth/sign-in');
   };
 

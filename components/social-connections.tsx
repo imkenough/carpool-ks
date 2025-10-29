@@ -43,11 +43,11 @@ const SOCIAL_CONNECTION_STRATEGIES = [
 
 export function SocialConnections() {
   const { colorScheme } = useColorScheme();
-  const { initializeAuth } = loginStore();
+  
 
   useEffect(() => {
     // Initialize auth status when app loads
-    initializeAuth();
+    
   }, []);
   const { mutate: handleGoogleSignup, isPending, error } = useGoogleSignIn()
  

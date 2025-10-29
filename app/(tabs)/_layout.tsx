@@ -6,19 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { useColorScheme } from 'nativewind';
 import loginStore from '@/utils/states/login-zus';
+import { checkAuthStatus } from '@/utils/local-storage/islogin';
 
 
 
 
 export default function TabLayout() {
-  //state management from zustand
-  const { Log, initializeAuth } = loginStore();
-  useEffect(() => {
-    // Initialize auth status when app loads
-    initializeAuth();
-  }, []);
+  const { Log, isHydrated } = loginStore();
 
-  if(!Log){
+  // Wait for hydration
+  if (!isHydrated) {
+    return null; // Or a splash screen
+  }
+
+  if (!Log) {
     return <Redirect href="../auth/sign-in" />;
   }
   

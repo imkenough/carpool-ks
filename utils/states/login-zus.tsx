@@ -1,49 +1,39 @@
 // login-zus.tsx
 import { create } from 'zustand';
-import { checkAuthStatus, performLogin, performLogout } from '../local-storage/islogin';
+import { checkAuthStatus } from '../local-storage/islogin';
 
 type StoreState = {
   Log: boolean;
-  isLoading: boolean;
-  login: () => Promise<void>;
-  logout: () => Promise<void>;
-  initializeAuth: () => Promise<void>;
+  isHydrated: boolean;
+  setLog: (value: boolean) => void;
+  login: () => void;
+  logout: () => void;
+  hydrate: () => Promise<void>;
 };
 
 const loginStore = create<StoreState>((set) => ({
   Log: false,
-  isLoading: true,
+  isHydrated: false,
 
-  // Initialize auth status on app start
-  initializeAuth: async () => {
-    set({ isLoading: true });
-    const status = await checkAuthStatus();
-    set({ Log: status, isLoading: false });
+  setLog: (value) => {
+    set({ Log: value });
   },
 
-  login: async () => {
-    try {
-      await performLogin();
-      set({ Log: true });
-    } catch (error) {
-      console.error('Login failed:', error);
-      // Optionally re-sync from AsyncStorage
-      const status = await checkAuthStatus();
-      set({ Log: status });
-    }
+  login: () => {
+    set({ Log: true });
   },
 
-  logout: async () => {
-    try {
-      await performLogout();
-      set({ Log: false });
-    } catch (error) {
-      console.error('Logout failed:', error);
-      // Optionally re-sync from AsyncStorage
-      const status = await checkAuthStatus();
-      set({ Log: status });
-    }
+  logout: () => {
+    set({ Log: false });
+  },
+
+  hydrate: async () => {
+    const isLoggedIn = await checkAuthStatus();
+    set({ Log: isLoggedIn, isHydrated: true });
   },
 }));
+
+// Hydrate immediately when store is created
+loginStore.getState().hydrate();
 
 export default loginStore;

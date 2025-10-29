@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import loginStore from '../states/login-zus';
+import { performLogin } from '../local-storage/islogin';
 
 // Configure Google Sign-In on app startup
 GoogleSignin.configure({
@@ -89,7 +90,9 @@ export const useGoogleSignIn = () => {
   const router = useRouter();
   const {  login } = loginStore();
   const handleLogin = async () => {
-    await login();
+    login()
+    await performLogin()
+    
   };
 
   return useMutation({

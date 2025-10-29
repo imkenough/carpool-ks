@@ -33,7 +33,7 @@ export default function Screen() {
   const router = useRouter();
   const [pickerState, setPickerState] = React.useState<'idle' | 'spinning'>('idle');
   const { mutate: postRide, isPending } = usePostRide();
-  console.log(checkAuthStatus())
+  
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedCustomLocation(customLocation);
