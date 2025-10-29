@@ -3,9 +3,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NAV_THEME } from '@/lib/theme';
 import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
-import { Slot } from 'expo-router';
+import { Slot, useRouter, SplashScreen } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
+
+// Prevent the splash screen from auto-hiding before complete authentication check
+SplashScreen.preventAutoHideAsync();
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -15,6 +18,7 @@ export {
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const queryClient = new QueryClient();
+  
 
   return (
     <QueryClientProvider client={queryClient}>

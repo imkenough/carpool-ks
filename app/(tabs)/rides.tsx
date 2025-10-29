@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, FlatList, Alert } from 'react-native';
+import { View, FlatList, Alert, RefreshControl } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -54,8 +54,16 @@ const RidesListHeader = React.memo(
 );
 
 /* -------------------- SKELETON & FOOTER -------------------- */
-const ListFooter = () => <View className="h-[200px]" />;
 
+
+const RidesListEmpty = () => (
+  <View className="flex-1 items-center justify-center py-24">
+    <Text className="text-lg text-muted-foreground">No rides found.</Text>
+    <Text className="text-sm text-muted-foreground">
+      Try adjusting your search or check back later.
+    </Text>
+  </View>
+);
 const RideCardSkeleton = React.memo(() => (
   <Card className="my-1.5 w-full max-w-sm">
     <CardHeader>
@@ -96,9 +104,16 @@ export default function RidesScreen() {
 
   // --- Data Fetching ---
   const { mutate: postRide, isPending } = usePostRide();
-  const { data: database, isLoading } = filtersApplied
-    ? useRides(travelDirection!, location!, traveldate)
-    : useAllRides();
+  const {
+    data: database,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = filtersApplied ? useRides(travelDirection!, location!, traveldate) : useAllRides();
+
+  const onRefresh = React.useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Reset filter state when the screen comes into focus
   useFocusEffect(
@@ -149,21 +164,19 @@ export default function RidesScreen() {
           keyExtractor={keyExtractor}
           showsVerticalScrollIndicator={true}
           className="flex-1 px-4 pb-52"
-          ListFooterComponent={ListFooter}
-          ListEmptyComponent={NoRides}
+          ListFooterComponent={
+            <PostRideUi
+              travelDirection={travelDirection}
+              location={location}
+              traveldate={traveldate}
+              postRide={postRide}
+              isPending={isPending}
+            />
+          }
+          ListEmptyComponent={RidesListEmpty}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />}
         />
       )}
-
-      {/* Post Button UI */}
-      <View className="absolute bottom-0 left-0 right-0 z-10 px-4">
-        <PostRideUi
-          travelDirection={travelDirection}
-          location={location}
-          traveldate={traveldate}
-          postRide={postRide}
-          isPending={isPending}
-        />
-      </View>
     </View>
   );
 }

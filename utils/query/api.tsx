@@ -37,8 +37,8 @@ const fetchRides = async (
   const { data, error } = await supabase
     .from('rides')
     .select('*')
-    .eq('destination', destination)
-    .eq('from', from)
+    .ilike('destination', `%${destination}%`)
+    .ilike('from', `%${from}%`)
     .gte('date', startDate.toISOString()) // Greater than or equal to start
     .lt('date', endDate.toISOString()); // Less than end (exclusive)
 
@@ -86,14 +86,60 @@ const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
  * @param ride - The ride object containing name, destination, from, and date
  */
 const postRide = async (ride: {
-  name: string;
   destination: string;
   from: string;
   date: Date;
 }): Promise<void> => {
-  const { error } = await supabase.from('rides').insert([ride]);
-  if (error) throw new Error(error.message);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('User not authenticated. Cannot post ride.');
+  }
+
+  // Fetch the user's full_name from their profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile?.full_name) {
+    throw new Error('Could not find user profile or name. Please complete your profile.');
+  }
+
+  // Construct the new ride object with the user's name
+  const newRide = {
+    ...ride,
+    user_id: user.id,
+    name: profile.full_name, // Use the name from the profile
+  };
+
+  const { error } = await supabase.from('rides').insert([newRide]);
+  if (error) {
+    throw new Error(error.message);
+  }
 };
+
+const fetchUserProfile = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('full_name, avatar_url, phone_number')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+
+  return data;
+};
+
 
 // =============================================================================
 // REACT QUERY HOOKS - Custom hooks for data fetching and mutations
@@ -113,7 +159,6 @@ export const useRides = (
     queryKey: ['rides', destination, from, date, time],
     queryFn: () => fetchRides(destination, from, date, time),
     enabled: Boolean(destination && from), // Prevent unnecessary queries
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -125,7 +170,6 @@ export const useAllRides = () => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'all'],
     queryFn: fetchAllRides,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -138,7 +182,6 @@ export const useRidesByDate = (date: Date) => {
     queryKey: ['rides', 'byDate', date],
     queryFn: () => fetchRidesByDate(date),
     enabled: Boolean(date), // Prevent query with invalid date
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -156,7 +199,15 @@ export const usePostRide = () => {
       queryClient.invalidateQueries({ queryKey: ['rides'] });
     },
     onError: (error: Error) => {
+      Alert.alert('Error', error.message);
       console.error('❌ Error posting ride:', error.message);
     },
+  });
+};
+
+export const useUserProfile = () => {
+  return useQuery({
+    queryKey: ['user-profile'],
+    queryFn: fetchUserProfile,
   });
 };

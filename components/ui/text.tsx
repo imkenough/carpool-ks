@@ -34,7 +34,6 @@ const textVariants = cva(
         large: 'text-lg font-semibold',
         small: 'text-sm font-medium leading-none',
         muted: 'text-muted-foreground text-sm',
-        destructive: 'text-sm font-medium leading-none text-destructive'
       },
     },
     defaultVariants: {
