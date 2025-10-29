@@ -120,6 +120,27 @@ const postRide = async (ride: {
   }
 };
 
+const fetchUserProfile = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('full_name, avatar_url, phone_number')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+
+  return data;
+};
+
+
 // =============================================================================
 // REACT QUERY HOOKS - Custom hooks for data fetching and mutations
 // =============================================================================
@@ -138,7 +159,6 @@ export const useRides = (
     queryKey: ['rides', destination, from, date, time],
     queryFn: () => fetchRides(destination, from, date, time),
     enabled: Boolean(destination && from), // Prevent unnecessary queries
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -150,7 +170,6 @@ export const useAllRides = () => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'all'],
     queryFn: fetchAllRides,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -163,7 +182,6 @@ export const useRidesByDate = (date: Date) => {
     queryKey: ['rides', 'byDate', date],
     queryFn: () => fetchRidesByDate(date),
     enabled: Boolean(date), // Prevent query with invalid date
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
@@ -184,5 +202,12 @@ export const usePostRide = () => {
       Alert.alert('Error', error.message);
       console.error('❌ Error posting ride:', error.message);
     },
+  });
+};
+
+export const useUserProfile = () => {
+  return useQuery({
+    queryKey: ['user-profile'],
+    queryFn: fetchUserProfile,
   });
 };

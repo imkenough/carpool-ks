@@ -1,9 +1,6 @@
-import { SocialConnections } from '@/components/social-connections';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
@@ -11,26 +8,22 @@ import * as React from 'react';
 import { Alert, AppState, Platform, Pressable, type TextInput, View } from 'react-native';
 
 // Tells Supabase Auth to continuously refresh the session automatically
-// in  background when the app is open., this is the required for OAuth to work
+// in the background when the app is open., this is required for OAuth to work
 AppState.addEventListener('change', (nextAppState) => {
   if (nextAppState === 'active') {
-    supabase.auth.startAutoRefresh();
+    supabase.auth.startAutoRefresh()
   } else {
-    supabase.auth.stopAutoRefresh();
+    supabase.auth.stopAutoRefresh()
   }
-});
+})
 
 export function SignUpForm() {
   const router = useRouter();
-  const passwordInputRef = React.useRef<TextInput>(null);
-  const platform = Platform.OS == 'ios';
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [name, setName] = React.useState('');
 
   const handelSignup = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { error } = await supabase
         .from('profiles')
@@ -48,14 +41,6 @@ export function SignUpForm() {
       router.replace('../auth/sign-in');
     }
   };
-
-  function onEmailSubmitEditing() {
-    passwordInputRef.current?.focus();
-  }
-
-  function onSubmit() {
-    // TODO: Submit form and navigate to protected screen if successful
-  }
 
   return (
     <View className="gap-6">
@@ -90,6 +75,12 @@ export function SignUpForm() {
           <Button disabled={phoneNumber.length !== 10 || name.length < 3} onPress={handelSignup}>
             <Text>Continue</Text>
           </Button>
+          <View className="flex-row items-center justify-center gap-x-1">
+            <Text className="text-sm text-muted-foreground">temporary development links - </Text>
+            <Pressable onPress={() => router.replace('../auth/sign-in')}>
+              <Text className="text-sm font-semibold text-primary">Sign in page </Text>
+            </Pressable>
+          </View>
         </CardContent>
       </Card>
     </View>
