@@ -1,15 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useRouter } from 'expo-router';
-import { Loader2 } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
-import { usePostRide } from '@/utils/query/api';
-import { checkAuthStatus } from '@/utils/local-storage/islogin';
+
 
 const travelOptions = [
   { label: 'Going to College', value: 'to-college' },
@@ -19,10 +17,11 @@ const travelOptions = [
 const locationOptions = [
   { label: 'Airport', value: 'Airport' },
   { label: 'Station', value: 'Station' },
+  { label: 'City', value: 'City' },
   { label: 'Custom', value: 'custom' },
 ];
 
-const locationLayout = [['Airport', 'Station'], ['custom']];
+const locationLayout = [['Airport', 'Station', 'City'], ['custom']];
 
 export default function Screen() {
   const [destination, setDestination] = React.useState('to-college');
@@ -32,8 +31,8 @@ export default function Screen() {
   const { date, setDate } = useDate();
   const router = useRouter();
   const [pickerState, setPickerState] = React.useState<'idle' | 'spinning'>('idle');
-  const { mutate: postRide, isPending } = usePostRide();
-  
+  const [minDate] = React.useState(new Date());
+
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedCustomLocation(customLocation);
@@ -43,6 +42,12 @@ export default function Screen() {
       clearTimeout(handler);
     };
   }, [customLocation]);
+
+
+
+
+  const isPastDate = (date: Date): boolean => date < minDate;
+
 
   const locationTitle =
     destination === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
@@ -57,8 +62,8 @@ export default function Screen() {
   const isCustomLocationInvalid = location === 'custom' && rideLocation === '';
 
   // Combine disabled states for clarity
-  const isFindDisabled = isPickerSpinning || isCustomLocationInvalid;
-  
+  const isFindDisabled = isPickerSpinning || isCustomLocationInvalid || isPastDate(date);
+
   return (
     <>
       <View className="flex-1 p-4">
@@ -103,7 +108,10 @@ export default function Screen() {
           />
         </View>
 
+        {isPastDate(date) && <Text className='my-2' variant={'destructive'}>Can't find rides that are in the past</Text>}
+
         <View className="mb-4" />
+
 
         <Button
           disabled={isFindDisabled}

@@ -7,25 +7,23 @@ import { MyCard, CardParams } from '@/components/mycard';
 import { useAllRides, usePostRide, useRides } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react-native';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-
+import PostRideUi from '@/components/post-ride';
 /* -------------------- TYPES -------------------- */
 type RideScreenParams = {
   travelDirection?: string;
   location?: string;
   date?: string;
 };
+/* -------------------- No RIDES -------------------- */
+const NoRides = () => {
+  return (
+    <View className="flex-1 justify-center items-center">
+      <Text variant="h1" className='mt-[20px]'>No rides on this date ?</Text>
+      <Text variant="blockquote">try posting one</Text>
+    </View>
+  );
+};
+
 
 /* -------------------- HEADER -------------------- */
 const RidesListHeader = React.memo(
@@ -50,7 +48,7 @@ const RidesListHeader = React.memo(
         </View>
       );
     }
-
+    
     return <Text className="my-4 px-4 text-lg font-bold">Showing all rides</Text>;
   }
 );
@@ -88,90 +86,7 @@ const RideCardSkeleton = React.memo(() => (
   </Card>
 ));
 
-/* -------------------- POST RIDE UI -------------------- */
-const PostRideUi = React.memo(
-  ({
-    travelDirection,
-    location,
-    traveldate,
-    postRide,
-    isPending,
-  }: {
-    travelDirection?: string;
-    location?: string;
-    traveldate: Date;
-    postRide: (data: any) => void;
-    isPending: boolean;
-  }) => {
-    // Check if we have the necessary data to post a ride
-    const canPost = !!travelDirection && !!location && !!traveldate;
 
-    // Memoize formatted strings to avoid recalculating on every render
-    const formattedDate = React.useMemo(() => traveldate.toLocaleDateString(), [traveldate]);
-    const formatedTime = React.useMemo(
-      () =>
-        traveldate.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      [traveldate]
-    );
-
-    const handlePress = () => {
-      postRide({
-        destination: travelDirection!,
-        from: location!,
-        date: traveldate,
-      });
-    };
-
-    return (
-      <View className="my-2.5 rounded-2xl border border-neutral-300 bg-neutral-200/80 px-6 py-6 backdrop-blur-xl dark:border-neutral-700 dark:bg-neutral-800/80">
-        <Text className="mb-4" variant="h4">
-          Can't find a ride? Post a ride yourself
-        </Text>
-        {/* <Text className="mb-4" variant="">
-          Post a ride yourself
-        </Text> */}
-        {!canPost && (
-          <Text className="mb-4" variant="destructive">
-            {' '}
-            Find rides in home to post a rides{' '}
-          </Text>
-        )}
-        {/* Alert Box */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button disabled={!canPost || isPending}>
-              {isPending ? (
-                <Loader2 className="animate-spin text-foreground" />
-              ) : (
-                <Text>Post Ride</Text>
-              )}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Do you want to post this ride?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Posting a ride from {location} to {travelDirection} on {formattedDate} at{' '}
-                {formatedTime}.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>
-                <Text>Cancel</Text>
-              </AlertDialogCancel>
-              <AlertDialogAction onPress={handlePress}>
-                <Text>Continue</Text>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </View>
-    );
-  }
-);
 
 /* -------------------- MAIN SCREEN -------------------- */
 export default function RidesScreen() {
@@ -247,7 +162,7 @@ export default function RidesScreen() {
           data={database}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
           className="flex-1 px-4 pb-52"
           ListFooterComponent={
             <PostRideUi
