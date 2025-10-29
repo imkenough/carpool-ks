@@ -126,7 +126,7 @@ const PostRideUi = React.memo(
     };
 
     return (
-      <View className="my-2.5 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-200/80 dark:bg-neutral-800/80 px-6 py-6 backdrop-blur-xl">
+      <View className="my-2.5 rounded-2xl border border-neutral-300 bg-neutral-200/80 px-6 py-6 backdrop-blur-xl dark:border-neutral-700 dark:bg-neutral-800/80">
         <Text className="mb-4" variant="h4">
           Can't find a ride? Post a ride yourself
         </Text>
@@ -154,7 +154,7 @@ const PostRideUi = React.memo(
             <AlertDialogHeader>
               <AlertDialogTitle>Do you want to post this ride?</AlertDialogTitle>
               <AlertDialogDescription>
-                We will be posting a ride from {location} to {travelDirection} on {formattedDate} at{' '}
+                Posting a ride from {location} to {travelDirection} on {formattedDate} at{' '}
                 {formatedTime}.
               </AlertDialogDescription>
             </AlertDialogHeader>

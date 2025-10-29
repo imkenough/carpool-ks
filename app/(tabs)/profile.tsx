@@ -27,7 +27,9 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   async function fetchUserName() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -62,7 +64,9 @@ export default function ProfileScreen() {
   };
 
   const handleSaveChanges = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { error } = await supabase
         .from('profiles')
@@ -81,60 +85,92 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 p-4">
-      <View className="flex-row items-center justify-between mb-4">
+      <View className="mb-4 flex-row items-center justify-between">
         <Text className="text-2xl font-bold">Hi {userName || 'User'}</Text>
         <Avatar>
           <AvatarImage source={{ uri: userPhoto || 'https://github.com/shadcn.png' }} />
-          <AvatarFallback><Text>{userName ? userName.charAt(0).toUpperCase() : 'U'}</Text></AvatarFallback>
+          <AvatarFallback>
+            <Text>{userName ? userName.charAt(0).toUpperCase() : 'U'}</Text>
+          </AvatarFallback>
         </Avatar>
       </View>
-      
+
       <View className="mb-8">
-        <Text className="text-xl font-semibold mb-2">My Ride Requests</Text>
+        <Text className="mb-2 text-xl font-semibold">My Ride Requests</Text>
         {/* Placeholder for ride requests */}
         <Text>You have not sent any ride requests yet.</Text>
       </View>
 
       <View>
-        <Text className="text-xl font-semibold mb-2">My Posted Rides</Text>
+        <Text className="mb-2 text-xl font-semibold">My Posted Rides</Text>
         {/* Placeholder for posted rides */}
         <Text>You have not posted any rides yet.</Text>
       </View>
 
-      <View className="flex-col gap-4 mt-auto">
+      <View className="mt-auto flex-col gap-2">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button><Text>Edit Profile</Text></Button>
+            <Button>
+              <Text>Edit Profile</Text>
+            </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle><Text>Edit profile</Text></DialogTitle>
+              <DialogTitle>
+                <Text>Edit profile</Text>
+              </DialogTitle>
               <DialogDescription>
                 <Text>Make changes to your profile here. Click save when you're done.</Text>
               </DialogDescription>
             </DialogHeader>
             <View className="gap-4 py-4">
-              <Label htmlFor="fullName"><Text>Full Name</Text></Label>
-              <Input
+              <Label htmlFor="fullName">
+                <Text>Full Name</Text>
+              </Label>
+              {/* <Input
                 id="fullName"
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Enter your full name"
-              />
-              <Label htmlFor="phoneNumber"><Text>Phone Number</Text></Label>
+              /> */}
               <Input
+                returnKeyType="send"
+                keyboardType="default"
+                placeholder="Name"
+                autoCapitalize="words"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+              <Label htmlFor="phoneNumber">
+                <Text>Phone Number</Text>
+              </Label>
+              {/* <Input
                 id="phoneNumber"
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 placeholder="Enter your phone number"
                 keyboardType="phone-pad"
+              /> */}
+              <Input
+                returnKeyType="send"
+                keyboardType="numeric"
+                placeholder="Phone Number"
+                maxLength={10}
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
               />
             </View>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline"><Text>Cancel</Text></Button>
+                <Button variant="outline">
+                  <Text>Cancel</Text>
+                </Button>
               </DialogClose>
-              <Button onPress={handleSaveChanges}><Text>Save changes</Text></Button>
+              <Button
+                disabled={phoneNumber.length !== 10 || fullName.length < 3}
+                onPress={handleSaveChanges}>
+                <Text>Save changes</Text>
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
