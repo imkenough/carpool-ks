@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
+import { performLogin } from '@/utils/local-storage/islogin';
+import loginStore from '@/utils/states/login-zus';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
@@ -21,6 +23,12 @@ export function SignUpForm() {
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [name, setName] = React.useState('');
+  const { login } = loginStore();
+  const handleLogin = async () => {
+    login()
+    await performLogin()
+
+  };
 
   const handelSignup = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -29,17 +37,19 @@ export function SignUpForm() {
         .from('profiles')
         .update({ full_name: name, phone_number: phoneNumber })
         .eq('id', user.id);
-
+      
       if (error) {
         Alert.alert('Error', 'Failed to update profile. Please try again.');
         console.error('Error updating profile:', error);
       } else {
-        router.replace('/(tabs)');
+        handleLogin()
+        router.replace('/');
       }
     } else {
       Alert.alert('Error', 'You are not logged in. Please sign in again.');
       router.replace('../auth/sign-in');
     }
+
   };
 
   return (

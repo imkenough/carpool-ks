@@ -18,15 +18,20 @@ export {
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const queryClient = new QueryClient();
-  
+
 
   return (
     <QueryClientProvider client={queryClient}>
-    <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <Slot />
-      <PortalHost />
-    </ThemeProvider>
+      <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <Slot
+          screenOptions={{
+            animation: 'none', // Corrected property
+            headerShown: false // Often useful when customizing layouts
+          }}
+        />
+        <PortalHost />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

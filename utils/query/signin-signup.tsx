@@ -21,7 +21,7 @@ GoogleSignin.configure({
 async function googleSignin() {
   try {
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    
+
     const userInfo = await GoogleSignin.signIn();
     const idToken = userInfo.data?.idToken;
 
@@ -70,15 +70,15 @@ async function googleSignin() {
       case statusCodes.SIGN_IN_CANCELLED:
         console.log('Sign-In cancelled by user');
         return null;
-      
+
       case statusCodes.IN_PROGRESS:
         console.warn('Sign-In already in progress');
         return null;
-      
+
       case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
         Alert.alert('Error', 'Google Play Services is not available or outdated');
         throw new Error('Play Services not available');
-      
+
       default:
         throw new Error(error.message || 'An unknown error occurred during sign-in');
     }
@@ -88,11 +88,11 @@ async function googleSignin() {
 export const useGoogleSignIn = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const {  login } = loginStore();
+  const { login } = loginStore();
   const handleLogin = async () => {
     login()
     await performLogin()
-    
+
   };
 
   return useMutation({
@@ -102,10 +102,15 @@ export const useGoogleSignIn = () => {
 
       queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
-      
+
       console.log('✅ Google Sign-In Successful');
-      handleLogin()
-      router.replace(data.isProfileComplete ? '/' : '../auth/sign-up');
+      if (data.isProfileComplete) {
+        
+        handleLogin()
+        router.replace('/');
+      }
+      router.push('../auth/sign-up')
+
     },
     onError: (error: Error) => {
       Alert.alert('Sign-In Failed', error.message);
