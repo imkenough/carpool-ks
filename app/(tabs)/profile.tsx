@@ -86,7 +86,7 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 p-4">
       <View className="mb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold">Hi {userName || 'User'}</Text>
+        <Text className="text-2xl font-bold">Hi {userName || 'User'}, </Text>
         <Avatar>
           <AvatarImage source={{ uri: userPhoto || 'https://github.com/shadcn.png' }} />
           <AvatarFallback>
@@ -94,6 +94,14 @@ export default function ProfileScreen() {
           </AvatarFallback>
         </Avatar>
       </View>
+
+      {phoneNumber && (
+        <View className="mb-4">
+          <Text variant={'muted'} className="text-xl font-semibold">
+            {phoneNumber}
+          </Text>
+        </View>
+      )}
 
       <View className="mb-8">
         <Text className="mb-2 text-xl font-semibold">My Ride Requests</Text>
