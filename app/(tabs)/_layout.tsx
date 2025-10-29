@@ -1,12 +1,27 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { Home, Car, User, SunIcon, MoonStarIcon } from 'lucide-react-native';
 import { DateProvider } from '@/lib/date-context';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { useColorScheme } from 'nativewind';
+import loginStore from '@/utils/states/login-zus';
+
+
+
 
 export default function TabLayout() {
+  //state management from zustand
+  const { Log, initializeAuth } = loginStore();
+  useEffect(() => {
+    // Initialize auth status when app loads
+    initializeAuth();
+  }, []);
+
+  if(!Log){
+    return <Redirect href="../auth/sign-in" />;
+  }
+  
   return (
     <DateProvider>
       <Tabs>

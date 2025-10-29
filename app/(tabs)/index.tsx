@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
 import { usePostRide } from '@/utils/query/api';
+import { checkAuthStatus } from '@/utils/local-storage/islogin';
 
 const travelOptions = [
   { label: 'Going to College', value: 'to-college' },
@@ -32,7 +33,7 @@ export default function Screen() {
   const router = useRouter();
   const [pickerState, setPickerState] = React.useState<'idle' | 'spinning'>('idle');
   const { mutate: postRide, isPending } = usePostRide();
-
+  console.log(checkAuthStatus())
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedCustomLocation(customLocation);

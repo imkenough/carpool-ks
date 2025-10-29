@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import loginStore from '@/utils/states/login-zus';
 
 export default function ProfileScreen() {
   const [userName, setUserName] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export default function ProfileScreen() {
   const [fullName, setFullName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { logout, initializeAuth } = loginStore();
   const router = useRouter();
 
   async function fetchUserName() {
@@ -56,10 +58,12 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     fetchUserName();
+    initializeAuth()
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+     await logout()
     router.replace('/auth/sign-in');
   };
 
@@ -87,7 +91,7 @@ export default function ProfileScreen() {
     <View className="flex-1 p-4">
       <View className="mb-4 flex-row items-center justify-between">
         <Text className="text-2xl font-bold">Hi {userName || 'User'}, </Text>
-        <Avatar>
+        <Avatar alt={'https://avatar.iran.liara.run/public'}>
           <AvatarImage source={{ uri: userPhoto || 'https://github.com/shadcn.png' }} />
           <AvatarFallback>
             <Text>{userName ? userName.charAt(0).toUpperCase() : 'U'}</Text>

@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { useColorScheme } from 'nativewind';
 import { Image, Platform, View } from 'react-native';
 import { useGoogleSignIn } from '@/utils/query/signin-signup';
+import { useEffect } from 'react';
+import loginStore from '@/utils/states/login-zus';
 
 // Define the base social connection strategies
 const BASE_SOCIAL_CONNECTION_STRATEGIES = [
@@ -41,6 +43,12 @@ const SOCIAL_CONNECTION_STRATEGIES = [
 
 export function SocialConnections() {
   const { colorScheme } = useColorScheme();
+  const { initializeAuth } = loginStore();
+
+  useEffect(() => {
+    // Initialize auth status when app loads
+    initializeAuth();
+  }, []);
   const { mutate: handleGoogleSignup, isPending, error } = useGoogleSignIn()
  
 

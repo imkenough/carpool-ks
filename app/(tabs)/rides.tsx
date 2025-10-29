@@ -56,7 +56,7 @@ const RidesListHeader = React.memo(
 );
 
 /* -------------------- SKELETON & FOOTER -------------------- */
-const ListFooter = () => <View className="h-[20px]" />;
+
 
 const RidesListEmpty = () => (
   <View className="flex-1 items-center justify-center py-24">
