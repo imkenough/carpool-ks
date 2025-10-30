@@ -1,10 +1,16 @@
 import { View } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter, Link } from 'expo-router';
+import { Trash2 } from 'lucide-react-native';
+
+// --- UI Components ---
 import { Text } from '@/components/ui/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Card } from '@/components/ui/card';
-import { Trash2 } from 'lucide-react-native';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogTrigger,
@@ -15,122 +21,50 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { useEffect, useState, useCallback } from 'react'; // Added useCallback
-import { useRouter, Link } from 'expo-router';
+
+// --- Utils & Hooks ---
 import { supabase } from '@/utils/supabase';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import loginStore from '@/utils/states/login-zus';
 import { performLogout } from '@/utils/local-storage/islogin';
+import { useUpdateUserProfile, useUserProfile } from '@/utils/query/fetch-update-profiles';
+import { usedeleteRide, useRidesByUserId,  } from '@/utils/query/fetch-post-rides';
+
+// --- Define a type for your ride data (optional but recommended) ---
+type Ride = {
+  id: string;
+  from: string;
+  destination: string;
+  // ... other ride properties
+};
 
 export default function ProfileScreen() {
   // --- State ---
-  const [userId, setUserId] = useState<string | null>(null); // Added to store user ID
-  const [userName, setUserName] = useState<string | null>(null);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  // State for the edit profile form
   const [fullName, setFullName] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [postedRides, setPostedRides] = useState<any[]>([]); // Consider creating a 'Ride' type
 
   // --- Hooks ---
   const { logout } = loginStore();
   const router = useRouter();
 
-  // --- Data Fetching Functions ---
+  // Data fetching with React Query
+  const { data: profile } = useUserProfile();
+  const userId = profile?.id; // Get user ID from the profile data
 
-  /**
-   * Fetches the user's profile data (name, photo, phone) from Supabase.
-   * Includes fallback logic for the username.
-   */
-  const fetchProfile = useCallback(async (id: string, email?: string) => {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('full_name, avatar_url, phone_number')
-      .eq('id', id)
-      .single();
+  const { data: usersRides } = useRidesByUserId(userId, {
+    enabled: !!userId, // Only run this query after we have a userId
+  });
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-    }
-
-    // Set profile data or fallbacks
-    if (profile) {
-      setUserName(profile.full_name);
-      setUserPhoto(profile.avatar_url);
-      setFullName(profile.full_name || '');
-      setPhoneNumber(profile.phone_number || '');
-    } else if (email) {
-      setUserName(email.split('@')[0]); // Fallback to email prefix
-      setFullName('');
-      setPhoneNumber('');
-    } else {
-      setUserName('User'); // Final fallback
-      setFullName('');
-      setPhoneNumber('');
-    }
-  }, []); // Empty dependency array, this function is stable
-
-  /**
-   * Fetches all rides posted by the given user ID.
-   */
-  const fetchPostedRides = useCallback(async (id: string) => {
-    const { data, error } = await supabase.from('rides').select('*').eq('user_id', id);
-
-    if (error) {
-      console.error('Error fetching posted rides:', error);
-    } else {
-      setPostedRides(data);
-    }
-  }, []); // Empty dependency array, this function is stable
-
-  // --- Effect for Initial Data Load ---
-
-  useEffect(() => {
-    /**
-     * Gets the current user and then fetches their profile and rides.
-     */
-    const loadUserData = async () => {
-      // 1. Get the authenticated user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        console.error('Error getting user or no user found:', authError);
-        // Optional: you could trigger a logout/redirect here if no user is found
-        return;
-      }
-
-      // 2. Set the user ID
-      setUserId(user.id);
-
-      // 3. Fetch profile and rides in parallel
-      await Promise.all([fetchProfile(user.id, user.email), fetchPostedRides(user.id)]);
-    };
-
-    loadUserData();
-  }, [fetchProfile, fetchPostedRides]); // Dependencies are stable callbacks
+  // Mutations
+  const { mutate: deleteRides } = usedeleteRide();
+  const { mutate: saveUserInfo } = useUpdateUserProfile();
 
   // --- Event Handlers ---
 
-  const handleDeleteRide = useCallback(
-    async (rideId: number) => {
-      if (!userId) return; // Guard clause
-
-      const { error } = await supabase.from('rides').delete().eq('id', rideId);
-      if (error) {
-        console.error('Error deleting ride:', error);
-      } else {
-        // Refetch rides list to update UI
-        fetchPostedRides(userId);
-        // Alternative (faster): optimistic update
-        // setPostedRides((prevRides) => prevRides.filter((ride) => ride.id !== rideId));
-      }
-    },
-    [userId, fetchPostedRides]
-  );
+  const handleDeleteRide = (rideId: string) => {
+    deleteRides(rideId);
+  };
 
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -140,65 +74,77 @@ export default function ProfileScreen() {
   }, [logout, router]);
 
   const handleSaveChanges = useCallback(async () => {
-    if (!userId) return; // Guard clause
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName, phone_number: phoneNumber })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating profile:', error);
-    } else {
-      console.log('Profile updated successfully!');
-      // Optimistic update: Set state locally for a faster UI response
-      setUserName(fullName);
-      setPhoneNumber(phoneNumber);
-      setIsDialogOpen(false); // Close the dialog
-      // No need to refetch, UI is now in sync
+    if (!userId) {
+      console.error('No user ID found to save changes');
+      return;
     }
-  }, [userId, fullName, phoneNumber]);
+
+    saveUserInfo(
+      { fullName, phoneNumber, userId },
+      {
+        onSuccess: () => {
+          console.log('Profile updated successfully!');
+          setIsDialogOpen(false); // Close the dialog on success
+          // React Query will automatically refetch 'useUserProfile'
+          // if you configured it to invalidate queries on success.
+        },
+        onError: (error) => {
+          console.error('Error updating profile:', error);
+        },
+      }
+    );
+  }, [userId, fullName, phoneNumber, saveUserInfo]);
+
+  // Syncs form state when the dialog is opened
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Pre-fill form with current profile data
+      setFullName(profile?.full_name || '');
+      setPhoneNumber(profile?.phone_number || '');
+    }
+    setIsDialogOpen(open);
+  };
 
   // --- Render ---
+
+  // Derive display values from the single source of truth (profile)
+  const displayName = profile?.full_name || 'User';
+  const displayPhoto = profile?.avatar_url || 'https://github.com/shadcn.png';
+  const displayPhone = profile?.phone_number;
 
   return (
     <View className="flex-1 p-4">
       {/* --- Profile Header --- */}
       <View className="mb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold">Hi {userName || 'User'}, </Text>
-        <Avatar alt="https://github.com/shadcn.png">
-          <AvatarImage source={{ uri: userPhoto || 'https://github.com/shadcn.png' }} />
+        <Text className="text-2xl font-bold">Hi {displayName}, </Text>
+        <Avatar alt={displayName}>
+          <AvatarImage source={{ uri: displayPhoto }} />
           <AvatarFallback>
-            <Text>{userName ? userName.charAt(0).toUpperCase() : 'U'}</Text>
+            <Text>{displayName.charAt(0).toUpperCase()}</Text>
           </AvatarFallback>
         </Avatar>
       </View>
 
       {/* --- Phone Number --- */}
-      {phoneNumber && (
+      {displayPhone && (
         <View className="mb-4">
           <Text variant={'muted'} className="text-xl font-semibold">
-            {phoneNumber}
+            {displayPhone}
           </Text>
         </View>
       )}
 
-      {/* --- Ride Requests --- */}
-      <View className="mb-8">
-        <Text className="mb-2 text-xl font-semibold">My Ride Requests</Text>
-        {/* Placeholder for ride requests */}
-        <Text>You have not sent any ride requests yet.</Text>
-      </View>
+    
 
       {/* --- Posted Rides --- */}
       <View>
         <Text className="mb-2 text-xl font-semibold">My Posted Rides</Text>
 
-        {postedRides.length > 0 ? (
-          postedRides.map((ride) => (
+        {(usersRides?.length || 0) > 0 ? (
+          (usersRides as Ride[]).map((ride) => (
             <Card key={ride.id} className="my-1 flex-row items-center justify-between p-2">
               <Link href={`/rides?rideId=${ride.id}`} asChild>
-                <Text variant={'destructive'}>
+                <Text variant={'link'}>
                   {ride.from} to {ride.destination}
                 </Text>
               </Link>
@@ -215,7 +161,7 @@ export default function ProfileScreen() {
       {/* --- Footer Buttons (Edit & Logout) --- */}
       <View className="mt-auto flex-col gap-2">
         {/* --- Edit Profile Dialog --- */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button>
               <Text>Edit Profile</Text>
@@ -282,3 +228,5 @@ export default function ProfileScreen() {
     </View>
   );
 }
+
+

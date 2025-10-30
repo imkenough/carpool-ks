@@ -1,4 +1,4 @@
-// src/hooks/useRides.ts (Assuming the file is named useRides.ts now)
+// src/hooks/useRides.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 import { CardParams } from '@/components/mycard';
@@ -9,12 +9,8 @@ import { Alert } from 'react-native';
 // =============================================================================
 
 /**
- * Fetches rides filtered by destination, origin, date, and optional time range.
- * @param destination - The destination location
- * @param from - The origin location
- * @param date - The target date
- * @param time - Optional time range [hours, minutes, seconds, milliseconds]
- * @returns Array of rides matching the criteria
+ * Fetches rides based on destination, origin, and a specific date.
+ * @param time - Optional time range [startHour, startMinute, endHour, endMinute]
  */
 const fetchRides = async (
   destination: string,
@@ -37,7 +33,7 @@ const fetchRides = async (
   // Query rides within the time range, joining with profiles for phone number
   const { data, error } = await supabase
     .from('rides')
-    .select('*, profiles(phone_number)') // Standard syntax for joining 'profiles'
+    .select('*, profiles(phone_number)') // Join profiles table to get phone_number
     .ilike('destination', `%${destination}%`)
     .ilike('from', `%${from}%`)
     .gte('date', startDate.toISOString())
@@ -50,67 +46,43 @@ const fetchRides = async (
 
 /**
  * Fetches all rides without any filters.
- * @returns Array of all rides in the database
  */
 const fetchAllRides = async (): Promise<CardParams[]> => {
-  // FIX: Changed 'proflies' to 'profiles'
   const { data, error } = await supabase
     .from('rides')
-    .select('*, profiles(phone_number)')
+    .select('*, profiles(phone_number)') // Join profiles table to get phone_number
     .order('date', { ascending: true });
+
   if (error) throw new Error(error.message);
   return data ?? [];
 };
 
 /**
- * Fetches a single ride by its ID.
- * @param id - The ID of the ride
- * @returns A single ride object or null
+ * Fetches all rides for a specific user by their user_id.
  */
-const fetchRideById = async (id: number): Promise<CardParams | null> => {
+const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> => {
   const { data, error } = await supabase
     .from('rides')
-    .select('*, profiles(phone_number)')
-    .eq('id', id)
-    .single();
+    .select('*')
+    .eq('user_id', userId);
 
   if (error && error.code !== 'PGRST116') {
-    // PGRST116 is 'No rows found'
+    // PGRST116 is 'No rows found', which is not a critical error here
     throw new Error(error.message);
   }
+
   return data || null;
-};
-
-/**
- * Fetches rides for a specific date (entire day from midnight to midnight).
- * @param date - The target date
- * @returns Array of rides on that date
- */
-const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
-  // Set to start of day (midnight)
-  const startDate = new Date(date);
-  startDate.setHours(0, 0, 0, 0);
-
-  // Set to start of next day (midnight)
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 1);
-
-  // Query rides within the full day, joining with profiles for phone number
-  const { data, error } = await supabase
-    .from('rides')
-    .select('*, profiles(phone_number)')
-    .gte('date', startDate.toISOString())
-    .lt('date', endDate.toISOString());
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
 };
 
 /**
  * Adds a new ride to the database.
  * @param ride - The ride object containing destination, from, and date
  */
-const postRide = async (ride: { destination: string; from: string; date: Date }): Promise<void> => {
+const postRide = async (ride: {
+  destination: string;
+  from: string;
+  date: Date;
+}): Promise<void> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -127,7 +99,9 @@ const postRide = async (ride: { destination: string; from: string; date: Date })
     .single();
 
   if (profileError || !profile?.full_name) {
-    throw new Error('Could not find user profile or name. Please complete your profile.');
+    throw new Error(
+      'Could not find user profile or name. Please complete your profile.'
+    );
   }
 
   // Construct the new ride object with the user's name and ID
@@ -144,28 +118,14 @@ const postRide = async (ride: { destination: string; from: string; date: Date })
 };
 
 /**
- * Fetches the currently authenticated user's profile details.
+ * Deletes a specific ride from the database by its ID.
  */
-const fetchUserProfile = async () => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('full_name, avatar_url, phone_number')
-    .eq('id', user.id)
-    .single();
-
+const deleteRide = async (rideId: string) => {
+  const { error } = await supabase.from('rides').delete().eq('id', rideId);
   if (error) {
-    console.error('Error fetching user profile:', error);
-    return null;
+    console.error('Error deleting ride:', error);
+    throw new Error(error.message);
   }
-
-  return data;
 };
 
 // =============================================================================
@@ -190,13 +150,18 @@ export const useRides = (
 };
 
 /**
- * Hook to fetch a single ride by its ID.
+ * Hook to fetch all rides posted by a specific user.
  */
-export const useRideById = (id: number | undefined) => {
-  return useQuery<CardParams | null, Error>({
-    queryKey: ['ride', id],
-    queryFn: () => fetchRideById(id as number),
-    enabled: Boolean(id), // Only run if id is provided
+export const useRidesByUserId = (
+  id: string | undefined,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery<CardParams[] | null, Error>({
+    queryKey: ['rides', 'byUser', id],
+    queryFn: () => fetchRidesByUserId(id as string),
+    // Only run if id is provided AND the caller's enabled flag is true (or not set)
+    enabled: Boolean(id) && (options?.enabled ?? true),
+    ...options,
   });
 };
 
@@ -211,18 +176,6 @@ export const useAllRides = () => {
 };
 
 /**
- * Hook to fetch rides for a specific date.
- * Only executes when a valid date is provided.
- */
-export const useRidesByDate = (date: Date) => {
-  return useQuery<CardParams[], Error>({
-    queryKey: ['rides', 'byDate', date],
-    queryFn: () => fetchRidesByDate(date),
-    enabled: Boolean(date), // Prevent query with invalid date
-  });
-};
-
-/**
  * Hook to create a new ride (mutation).
  * Automatically invalidates all ride queries on success to refresh data.
  */
@@ -232,7 +185,7 @@ export const usePostRide = () => {
   return useMutation({
     mutationFn: postRide,
     onSuccess: () => {
-      // Refresh all ride queries (like 'all', 'byDate', and 'filtered' rides)
+      // Refresh all queries starting with 'rides'
       queryClient.invalidateQueries({ queryKey: ['rides'] });
       Alert.alert('Success', 'Your ride has been posted!');
     },
@@ -244,11 +197,22 @@ export const usePostRide = () => {
 };
 
 /**
- * Hook to fetch the authenticated user's profile.
+ * Hook to delete a ride (mutation).
+ * Automatically invalidates all ride queries on success to refresh data.
  */
-export const useUserProfile = () => {
-  return useQuery({
-    queryKey: ['user-profile'],
-    queryFn: fetchUserProfile,
+export const usedeleteRide = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteRide,
+    onSuccess: () => {
+      // Refresh all queries starting with 'rides'
+      queryClient.invalidateQueries({ queryKey: ['rides'] });
+      Alert.alert('Success', 'Your ride has been deleted.');
+    },
+    onError: (error: Error) => {
+      Alert.alert('Error', error.message);
+      console.error('❌ Error deleting ride:', error.message);
+    },
   });
 };

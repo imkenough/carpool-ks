@@ -45,7 +45,6 @@ const PostRideUi = React.memo(
 
         const handlePress = () => {
             postRide({
-                name: 'haaaa', // TODO: Replace hardcoded name with actual user name from auth
                 destination: travelDirection,
                 from: location,
                 date: traveldate,
