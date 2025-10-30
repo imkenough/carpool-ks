@@ -13,11 +13,11 @@ import { Alert, AppState, Platform, Pressable, type TextInput, View } from 'reac
 // in the background when the app is open., this is required for OAuth to work
 AppState.addEventListener('change', (nextAppState) => {
   if (nextAppState === 'active') {
-    supabase.auth.startAutoRefresh()
+    supabase.auth.startAutoRefresh();
   } else {
-    supabase.auth.stopAutoRefresh()
+    supabase.auth.stopAutoRefresh();
   }
-})
+});
 
 export function SignUpForm() {
   const router = useRouter();
@@ -25,31 +25,31 @@ export function SignUpForm() {
   const [name, setName] = React.useState('');
   const { login } = loginStore();
   const handleLogin = async () => {
-    login()
-    await performLogin()
-
+    login();
+    await performLogin();
   };
 
   const handelSignup = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { error } = await supabase
         .from('profiles')
         .update({ full_name: name, phone_number: phoneNumber })
         .eq('id', user.id);
-      
+
       if (error) {
         Alert.alert('Error', 'Failed to update profile. Please try again.');
         console.error('Error updating profile:', error);
       } else {
-        handleLogin()
+        handleLogin();
         router.replace('/');
       }
     } else {
       Alert.alert('Error', 'You are not logged in. Please sign in again.');
       router.replace('../auth/sign-in');
     }
-
   };
 
   return (
@@ -85,12 +85,12 @@ export function SignUpForm() {
           <Button disabled={phoneNumber.length !== 10 || name.length < 3} onPress={handelSignup}>
             <Text>Continue</Text>
           </Button>
-          <View className="flex-row items-center justify-center gap-x-1">
+          {/* <View className="flex-row items-center justify-center gap-x-1">
             <Text className="text-sm text-muted-foreground">temporary development links - </Text>
             <Pressable onPress={() => router.replace('../auth/sign-in')}>
               <Text className="text-sm font-semibold text-primary">Sign in page </Text>
             </Pressable>
-          </View>
+          </View> */}
         </CardContent>
       </Card>
     </View>

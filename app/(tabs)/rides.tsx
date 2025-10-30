@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { View, FlatList, Alert, RefreshControl } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Text } from '@/components/ui/text';
@@ -8,6 +7,7 @@ import { useAllRides, usePostRide, useRides } from '@/utils/query/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import PostRideUi from '@/components/post-ride';
+import React, { useRef } from 'react';
 /* -------------------- TYPES -------------------- */
 type RideScreenParams = {
   travelDirection?: string;
@@ -17,13 +17,14 @@ type RideScreenParams = {
 /* -------------------- No RIDES -------------------- */
 const NoRides = () => {
   return (
-    <View className="flex-1 justify-center items-center">
-      <Text variant="h1" className='mt-[20px]'>No rides on this date ?</Text>
+    <View className="flex-1 items-center justify-center">
+      <Text variant="h1" className="mt-[20px]">
+        No rides on this date ?
+      </Text>
       <Text variant="blockquote">try posting one</Text>
     </View>
   );
 };
-
 
 /* -------------------- HEADER -------------------- */
 const RidesListHeader = React.memo(
@@ -48,13 +49,12 @@ const RidesListHeader = React.memo(
         </View>
       );
     }
-    
+
     return <Text className="my-4 px-4 text-lg font-bold">Showing all rides</Text>;
   }
 );
 
 /* -------------------- SKELETON & FOOTER -------------------- */
-
 
 const RidesListEmpty = () => (
   <View className="flex-1 items-center justify-center py-24">
@@ -86,14 +86,19 @@ const RideCardSkeleton = React.memo(() => (
   </Card>
 ));
 
-
-
 /* -------------------- MAIN SCREEN -------------------- */
 export default function RidesScreen() {
-  const { travelDirection, location, date: dateString } = useLocalSearchParams<RideScreenParams>();
+  const {
+    travelDirection,
+    location,
+    date: dateString,
+    rideId,
+  } = useLocalSearchParams<RideScreenParams & { rideId?: string }>();
 
   // Memoize the traveldate object
   const traveldate = React.useMemo(() => new Date(dateString || Date.now()), [dateString]);
+
+  const flatListRef = useRef<FlatList>(null);
 
   // --- Filter Logic ---
   const [filtersCleared, setFiltersCleared] = React.useState(false);
@@ -122,6 +127,16 @@ export default function RidesScreen() {
     }, [])
   );
 
+  React.useEffect(() => {
+    if (rideId && database && flatListRef.current) {
+      const index = database.findIndex((ride) => ride.id === rideId);
+      if (index > -1) {
+        flatListRef.current.scrollToIndex({ index, animated: true });
+      }
+    }
+    console.log(database);
+  }, [rideId, database]);
+
   // --- FlatList Optimization ---
   const renderItem = React.useCallback(
     ({ item }: { item: CardParams }) => (
@@ -130,6 +145,7 @@ export default function RidesScreen() {
         name={item.name}
         destination={item.destination}
         date={item.date}
+        profiles={item.profiles}
         from={item.from}
       />
     ),
@@ -159,6 +175,7 @@ export default function RidesScreen() {
         />
       ) : (
         <FlatList
+          ref={flatListRef}
           data={database}
           renderItem={renderItem}
           keyExtractor={keyExtractor}

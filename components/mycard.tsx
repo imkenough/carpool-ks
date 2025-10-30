@@ -8,13 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-
 import { Text } from '@/components/ui/text';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 
 export interface CardParams {
   id: string;
   name: string;
+  profiles: { phone_number: string };
   destination: string;
   date: Date;
   from: string;
@@ -22,6 +22,13 @@ export interface CardParams {
 
 export const MyCard: React.FC<CardParams> = (props) => {
   const date = new Date(props.date + 'Z');
+
+  const handlePress = async () => {
+    const whatsappUrl = 'https://wa.me/+91' + props.profiles.phone_number;
+    console.log(whatsappUrl);
+    await Linking.openURL(whatsappUrl);
+  };
+
   return (
     <Card className="my-1.5 w-full max-w-sm" id={props.id}>
       <CardHeader>
@@ -43,7 +50,7 @@ export const MyCard: React.FC<CardParams> = (props) => {
         </View>
       </CardContent>
       <CardFooter>
-        <Button className="w-full">
+        <Button className="w-full" onPress={() => handlePress()}>
           <Text>Join Ride</Text>
         </Button>
       </CardFooter>

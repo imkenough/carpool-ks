@@ -9,7 +9,6 @@ import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
 import { useColorScheme } from 'nativewind';
 
-
 const travelOptions = [
   { label: 'Going to College', value: 'to-college' },
   { label: 'Leaving College', value: 'from-college' },
@@ -45,11 +44,7 @@ export default function Screen() {
     };
   }, [customLocation]);
 
-
-
-
   const isPastDate = (date: Date): boolean => date < minDate;
-
 
   const locationTitle =
     destination === 'to-college' ? 'Where are you coming from?' : 'Where are you going to?';
@@ -109,14 +104,17 @@ export default function Screen() {
             onStateChange={(val) => setPickerState(val)}
             key={colorScheme}
             theme={colorScheme === 'dark' ? 'dark' : 'light'}
-            textColor={colorScheme === 'dark' ? '#ffffff' : '#000000'}
+            // textColor={colorScheme === 'dark' ? '#ffffff' : '#000000'}
           />
         </View>
 
-        {isPastDate(date) && <Text className='my-2' variant={'destructive'}>Can't find rides that are in the past</Text>}
+        {isPastDate(date) && (
+          <Text className="my-2" variant={'destructive'}>
+            Can't find rides that are in the past
+          </Text>
+        )}
 
         <View className="mb-4" />
-
 
         <Button
           disabled={isFindDisabled}
