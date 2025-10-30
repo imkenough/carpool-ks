@@ -85,12 +85,10 @@ const fetchRidesByDate = async (date: Date): Promise<CardParams[]> => {
  * Adds a new ride to the database
  * @param ride - The ride object containing name, destination, from, and date
  */
-const postRide = async (ride: {
-  destination: string;
-  from: string;
-  date: Date;
-}): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
+const postRide = async (ride: { destination: string; from: string; date: Date }): Promise<void> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     throw new Error('User not authenticated. Cannot post ride.');
@@ -121,7 +119,9 @@ const postRide = async (ride: {
 };
 
 const fetchUserProfile = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return null;
   }
@@ -139,7 +139,6 @@ const fetchUserProfile = async () => {
 
   return data;
 };
-
 
 // =============================================================================
 // REACT QUERY HOOKS - Custom hooks for data fetching and mutations
@@ -211,3 +210,4 @@ export const useUserProfile = () => {
     queryFn: fetchUserProfile,
   });
 };
+1;
