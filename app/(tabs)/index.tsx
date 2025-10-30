@@ -7,6 +7,7 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import DatePicker from 'react-native-date-picker';
 import { useDate } from '@/lib/date-context';
+import { useColorScheme } from 'nativewind';
 
 
 const travelOptions = [
@@ -32,6 +33,7 @@ export default function Screen() {
   const router = useRouter();
   const [pickerState, setPickerState] = React.useState<'idle' | 'spinning'>('idle');
   const [minDate] = React.useState(new Date());
+  const { colorScheme } = useColorScheme();
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -105,6 +107,9 @@ export default function Screen() {
             mode="datetime"
             minuteInterval={15}
             onStateChange={(val) => setPickerState(val)}
+            key={colorScheme}
+            theme={colorScheme === 'dark' ? 'dark' : 'light'}
+            textColor={colorScheme === 'dark' ? '#ffffff' : '#000000'}
           />
         </View>
 
