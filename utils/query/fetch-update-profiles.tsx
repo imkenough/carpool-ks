@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { supabase } from "../supabase";
 
+//--------------------------------------------------fuctions------------------------------------------------------------------------//
 /**
  * Fetches the currently authenticated user's profile details.
  */
@@ -59,6 +60,8 @@ const changeUserProfile = async ({
   return data;
 };
 
+
+//--------------------------------------------------hooks------------------------------------------------------------------------//
 /**
  * Hook to fetch the authenticated user's profile.
  */

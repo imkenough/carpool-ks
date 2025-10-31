@@ -5,7 +5,7 @@ import { CardParams } from '@/components/mycard';
 import { Alert } from 'react-native';
 
 // =============================================================================
-// FETCH FUNCTIONS - Database operations for rides and profiles
+// FETCH FUNCTIONS - Database operations for rides 
 // =============================================================================
 
 /**
@@ -73,6 +73,12 @@ const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> 
 
   return data || null;
 };
+
+
+
+// =============================================================================
+// POST FUNCTIONS - Database operations for rides 
+// =============================================================================
 
 /**
  * Adds a new ride to the database.
@@ -165,6 +171,8 @@ export const useRidesByUserId = (
   });
 };
 
+//--------------------------------------------Mutations-----------------------------------------------------------
+
 /**
  * Hook to fetch all rides without filters.
  */
@@ -179,6 +187,7 @@ export const useAllRides = () => {
  * Hook to create a new ride (mutation).
  * Automatically invalidates all ride queries on success to refresh data.
  */
+
 export const usePostRide = () => {
   const queryClient = useQueryClient();
 
@@ -200,6 +209,7 @@ export const usePostRide = () => {
  * Hook to delete a ride (mutation).
  * Automatically invalidates all ride queries on success to refresh data.
  */
+
 export const usedeleteRide = () => {
   const queryClient = useQueryClient();
 

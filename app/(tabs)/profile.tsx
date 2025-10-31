@@ -28,14 +28,11 @@ import loginStore from '@/utils/states/login-zus';
 import { performLogout } from '@/utils/local-storage/islogin';
 import { useUpdateUserProfile, useUserProfile } from '@/utils/query/fetch-update-profiles';
 import { usedeleteRide, useRidesByUserId,  } from '@/utils/query/fetch-post-rides';
+import { AlertBox } from '@/components/my-alert';
+import { CardParams } from '@/components/mycard';
 
-// --- Define a type for your ride data (optional but recommended) ---
-type Ride = {
-  id: string;
-  from: string;
-  destination: string;
-  // ... other ride properties
-};
+
+
 
 export default function ProfileScreen() {
   // --- State ---
@@ -44,9 +41,19 @@ export default function ProfileScreen() {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+
   // --- Hooks ---
   const { logout } = loginStore();
   const router = useRouter();
+
+
+  //fuction
+  const convertDate = (date : string) =>  {
+    const my_date = new Date(date + 'Z');
+    return my_date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+  }
+
 
   // Data fetching with React Query
   const { data: profile } = useUserProfile();
@@ -55,6 +62,7 @@ export default function ProfileScreen() {
   const { data: usersRides } = useRidesByUserId(userId, {
     enabled: !!userId, // Only run this query after we have a userId
   });
+ 
 
   // Mutations
   const { mutate: deleteRides } = usedeleteRide();
@@ -63,7 +71,8 @@ export default function ProfileScreen() {
   // --- Event Handlers ---
 
   const handleDeleteRide = (rideId: string) => {
-    deleteRides(rideId);
+    deleteRides(rideId)
+    
   };
 
   const handleLogout = useCallback(async () => {
@@ -72,6 +81,7 @@ export default function ProfileScreen() {
     await performLogout(); // Update local storage
     router.replace('/auth/sign-in'); // Redirect to login
   }, [logout, router]);
+
 
   const handleSaveChanges = useCallback(async () => {
     if (!userId) {
@@ -141,13 +151,17 @@ export default function ProfileScreen() {
         <Text className="mb-2 text-xl font-semibold">My Posted Rides</Text>
 
         {(usersRides?.length || 0) > 0 ? (
-          (usersRides as Ride[]).map((ride) => (
+          (usersRides as CardParams[]).map((ride) => (
             <Card key={ride.id} className="my-1 flex-row items-center justify-between p-2">
               <Link href={`/rides?rideId=${ride.id}`} asChild>
                 <Text variant={'link'}>
                   {ride.from} to {ride.destination}
                 </Text>
               </Link>
+              <Text variant={'muted'}>
+                {convertDate(ride.date)}
+              </Text>
+              
               <Button variant="destructive" size="sm" onPress={() => handleDeleteRide(ride.id)}>
                 <Icon as={Trash2} size={16} color="white" />
               </Button>
