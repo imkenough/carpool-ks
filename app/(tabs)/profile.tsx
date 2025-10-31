@@ -21,6 +21,17 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { MyPostedRideSkeleton } from '@/components/my-posted-ride-skeleton';
@@ -184,9 +195,29 @@ export default function ProfileScreen() {
                 </Text>
               </View>
               
-              <Button variant="destructive" size="sm" onPress={() => handleDeleteRide(ride.id)}>
-                <Icon as={Trash2} size={16} color="white" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Icon as={Trash2} size={16} color="white" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your ride.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>
+                      <Text>Cancel</Text>
+                    </AlertDialogCancel>
+                    <AlertDialogAction onPress={() => handleDeleteRide(ride.id)} variant="destructive">
+                      <Text>Continue</Text>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </Card>
           ))
         ) : (
@@ -257,9 +288,29 @@ export default function ProfileScreen() {
         </Dialog>
 
         {/* --- Logout Button --- */}
-        <Button variant="destructive" onPress={handleLogout}>
-          <Text>Logout</Text>
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive">
+              <Text>Logout</Text>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You will be returned to the login screen.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                <Text>Cancel</Text>
+              </AlertDialogCancel>
+              <AlertDialogAction onPress={handleLogout} variant="destructive">
+                <Text>Logout</Text>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </View>
     </View>
   );
