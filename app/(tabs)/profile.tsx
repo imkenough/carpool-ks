@@ -173,14 +173,16 @@ export default function ProfileScreen() {
         ) : (usersRides?.length || 0) > 0 ? (
           (usersRides as CardParams[]).map((ride) => (
             <Card key={ride.id} className="my-1 flex-row items-center justify-between p-2">
-              <Link href={`/rides?rideId=${ride.id}`} asChild>
-                <Text variant={'link'}>
-                  {ride.from} to {ride.destination}
+              <View className="flex-row items-center">
+                <Link href={`/rides?rideId=${ride.id}`} asChild>
+                  <Text variant={'link'}>
+                    {ride.from} to {ride.destination}
+                  </Text>
+                </Link>
+                <Text variant={'muted'} className="ml-2 opacity-60">
+                  {convertDate(ride.date)}
                 </Text>
-              </Link>
-              <Text variant={'muted'}>
-                {convertDate(ride.date)}
-              </Text>
+              </View>
               
               <Button variant="destructive" size="sm" onPress={() => handleDeleteRide(ride.id)}>
                 <Icon as={Trash2} size={16} color="white" />
