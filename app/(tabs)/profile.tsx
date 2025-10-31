@@ -22,6 +22,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 
+import { Skeleton } from '@/components/ui/skeleton';
+import { MyPostedRideSkeleton } from '@/components/my-posted-ride-skeleton';
+
 // --- Utils & Hooks ---
 import { supabase } from '@/utils/supabase';
 import loginStore from '@/utils/states/login-zus';
@@ -56,10 +59,10 @@ export default function ProfileScreen() {
 
 
   // Data fetching with React Query
-  const { data: profile } = useUserProfile();
+  const { data: profile, isLoading: isProfileLoading } = useUserProfile();
   const userId = profile?.id; // Get user ID from the profile data
 
-  const { data: usersRides } = useRidesByUserId(userId, {
+  const { data: usersRides, isLoading: areRidesLoading } = useRidesByUserId(userId, {
     enabled: !!userId, // Only run this query after we have a userId
   });
  
@@ -125,23 +128,34 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 p-4">
       {/* --- Profile Header --- */}
-      <View className="mb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold">Hi {displayName}, </Text>
-        <Avatar alt={displayName}>
-          <AvatarImage source={{ uri: displayPhoto }} />
-          <AvatarFallback>
-            <Text>{displayName.charAt(0).toUpperCase()}</Text>
-          </AvatarFallback>
-        </Avatar>
-      </View>
+      {isProfileLoading ? (
+        <View className="mb-4 flex-row items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-12 w-12 rounded-full" />
+        </View>
+      ) : (
+        <View className="mb-4 flex-row items-center justify-between">
+          <Text className="text-2xl font-bold">Hi {displayName}, </Text>
+          <Avatar alt={displayName}>
+            <AvatarImage source={{ uri: displayPhoto }} />
+            <AvatarFallback>
+              <Text>{displayName.charAt(0).toUpperCase()}</Text>
+            </AvatarFallback>
+          </Avatar>
+        </View>
+      )}
 
       {/* --- Phone Number --- */}
-      {displayPhone && (
-        <View className="mb-4">
-          <Text variant={'muted'} className="text-xl font-semibold">
-            {displayPhone}
-          </Text>
-        </View>
+      {isProfileLoading ? (
+        <Skeleton className="mb-4 h-6 w-32" />
+      ) : (
+        displayPhone && (
+          <View className="mb-4">
+            <Text variant={'muted'} className="text-xl font-semibold">
+              {displayPhone}
+            </Text>
+          </View>
+        )
       )}
 
     
@@ -150,7 +164,13 @@ export default function ProfileScreen() {
       <View>
         <Text className="mb-2 text-xl font-semibold">My Posted Rides</Text>
 
-        {(usersRides?.length || 0) > 0 ? (
+        {areRidesLoading ? (
+          <>
+            <MyPostedRideSkeleton />
+            <MyPostedRideSkeleton />
+            <MyPostedRideSkeleton />
+          </>
+        ) : (usersRides?.length || 0) > 0 ? (
           (usersRides as CardParams[]).map((ride) => (
             <Card key={ride.id} className="my-1 flex-row items-center justify-between p-2">
               <Link href={`/rides?rideId=${ride.id}`} asChild>
