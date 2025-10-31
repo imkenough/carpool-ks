@@ -196,7 +196,6 @@ export const usePostRide = () => {
     onSuccess: () => {
       // Refresh all queries starting with 'rides'
       queryClient.invalidateQueries({ queryKey: ['rides'] });
-      Alert.alert('Success', 'Your ride has been posted!');
     },
     onError: (error: Error) => {
       Alert.alert('Error', error.message);
@@ -218,7 +217,6 @@ export const usedeleteRide = () => {
     onSuccess: () => {
       // Refresh all queries starting with 'rides'
       queryClient.invalidateQueries({ queryKey: ['rides'] });
-      Alert.alert('Success', 'Your ride has been deleted.');
     },
     onError: (error: Error) => {
       Alert.alert('Error', error.message);

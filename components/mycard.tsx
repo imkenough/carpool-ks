@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,6 +19,8 @@ export interface CardParams {
   destination: string;
   date: Date;
   from: string;
+  user_id: string;
+  currentUserId: string | null;
 }
 
 export const MyCard: React.FC<CardParams> = (props) => {
@@ -30,11 +33,20 @@ export const MyCard: React.FC<CardParams> = (props) => {
   };
 
   return (
-    <Card className="my-1.5 w-full max-w-sm" id={props.id}>
+    <Card className="relative my-1.5 w-full max-w-sm" id={props.id}>
       <CardHeader>
-        <CardTitle>
-          {props.from} to {props.destination}
-        </CardTitle>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <CardTitle>
+              {props.from} to {props.destination}
+            </CardTitle>
+          </View>
+          {props.user_id === props.currentUserId && (
+            <Badge variant={'secondaryds'}>
+              <Text>OP</Text>
+            </Badge>
+          )}
+        </View>
         <CardDescription>Posted by {props.name}</CardDescription>
       </CardHeader>
       <CardContent className="">

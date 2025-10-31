@@ -7,6 +7,7 @@ import { useAllRides, usePostRide, useRides } from '@/utils/query/fetch-post-rid
 import PostRideUi from '@/components/post-ride';
 import React, { useRef } from 'react';
 import { RideCardSkeleton } from '@/components/card-skeleton';
+import { useUserId } from '@/utils/hooks/useUserId';
 /* -------------------- TYPES -------------------- */
 type RideScreenParams = {
   travelDirection?: string;
@@ -66,6 +67,8 @@ export default function RidesScreen() {
 
   const flatListRef = useRef<FlatList>(null);
 
+  const currentUserId = useUserId();
+
   // --- Filter Logic ---
   const [filtersCleared, setFiltersCleared] = React.useState(false);
   // Check if all required filter params are present
@@ -113,9 +116,11 @@ export default function RidesScreen() {
         date={item.date}
         profiles={item.profiles}
         from={item.from}
+        user_id={item.user_id}
+        currentUserId={currentUserId}
       />
     ),
-    []
+    [currentUserId]
   );
 
   const keyExtractor = React.useCallback((item: CardParams) => item.id.toString(), []);

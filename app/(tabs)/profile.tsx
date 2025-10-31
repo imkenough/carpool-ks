@@ -41,12 +41,9 @@ import { supabase } from '@/utils/supabase';
 import loginStore from '@/utils/states/login-zus';
 import { performLogout } from '@/utils/local-storage/islogin';
 import { useUpdateUserProfile, useUserProfile } from '@/utils/query/fetch-update-profiles';
-import { usedeleteRide, useRidesByUserId,  } from '@/utils/query/fetch-post-rides';
+import { usedeleteRide, useRidesByUserId } from '@/utils/query/fetch-post-rides';
 import { AlertBox } from '@/components/my-alert';
 import { CardParams } from '@/components/mycard';
-
-
-
 
 export default function ProfileScreen() {
   // --- State ---
@@ -55,19 +52,15 @@ export default function ProfileScreen() {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-
   // --- Hooks ---
   const { logout } = loginStore();
   const router = useRouter();
 
-
   //fuction
-  const convertDate = (date : string) =>  {
+  const convertDate = (date: string) => {
     const my_date = new Date(date + 'Z');
-    return my_date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-
-  }
-
+    return my_date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
 
   // Data fetching with React Query
   const { data: profile, isLoading: isProfileLoading } = useUserProfile();
@@ -76,7 +69,6 @@ export default function ProfileScreen() {
   const { data: usersRides, isLoading: areRidesLoading } = useRidesByUserId(userId, {
     enabled: !!userId, // Only run this query after we have a userId
   });
- 
 
   // Mutations
   const { mutate: deleteRides } = usedeleteRide();
@@ -85,8 +77,7 @@ export default function ProfileScreen() {
   // --- Event Handlers ---
 
   const handleDeleteRide = (rideId: string) => {
-    deleteRides(rideId)
-    
+    deleteRides(rideId);
   };
 
   const handleLogout = useCallback(async () => {
@@ -95,7 +86,6 @@ export default function ProfileScreen() {
     await performLogout(); // Update local storage
     router.replace('/auth/sign-in'); // Redirect to login
   }, [logout, router]);
-
 
   const handleSaveChanges = useCallback(async () => {
     if (!userId) {
@@ -169,8 +159,6 @@ export default function ProfileScreen() {
         )
       )}
 
-    
-
       {/* --- Posted Rides --- */}
       <View>
         <Text className="mb-2 text-xl font-semibold">My Posted Rides</Text>
@@ -194,7 +182,7 @@ export default function ProfileScreen() {
                   {convertDate(ride.date)}
                 </Text>
               </View>
-              
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
@@ -212,7 +200,9 @@ export default function ProfileScreen() {
                     <AlertDialogCancel>
                       <Text>Cancel</Text>
                     </AlertDialogCancel>
-                    <AlertDialogAction onPress={() => handleDeleteRide(ride.id)} variant="destructive">
+                    <AlertDialogAction
+                      onPress={() => handleDeleteRide(ride.id)}
+                      variant="destructive">
                       <Text>Continue</Text>
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -296,7 +286,7 @@ export default function ProfileScreen() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 You will be returned to the login screen.
               </AlertDialogDescription>
@@ -315,5 +305,3 @@ export default function ProfileScreen() {
     </View>
   );
 }
-
-
