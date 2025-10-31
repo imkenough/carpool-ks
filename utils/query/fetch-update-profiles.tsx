@@ -2,8 +2,8 @@ import {
   useQuery,
   useMutation,
   useQueryClient, // Import useMutation and useQueryClient
-} from "@tanstack/react-query";
-import { supabase } from "../supabase";
+} from '@tanstack/react-query';
+import { supabase } from '../supabase';
 
 //--------------------------------------------------fuctions------------------------------------------------------------------------//
 /**
@@ -17,14 +17,10 @@ const fetchUserProfile = async () => {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
   if (error) {
-    console.error("Error fetching user profile:", error);
+    console.error('Error fetching user profile:', error);
     return null;
   }
 
@@ -45,14 +41,14 @@ const changeUserProfile = async ({
   userId: string;
 }) => {
   const { data, error } = await supabase
-    .from("profiles")
+    .from('profiles')
     .update({ full_name: fullName, phone_number: phoneNumber })
-    .eq("id", userId)
+    .eq('id', userId)
     .select() // Return the updated data
     .single();
 
   if (error) {
-    console.error("Error updating profile:", error);
+    console.error('Error updating profile:', error);
     // Throw error to be caught by useMutation's onError
     throw new Error(error.message);
   }
@@ -60,14 +56,14 @@ const changeUserProfile = async ({
   return data;
 };
 
-
 //--------------------------------------------------hooks------------------------------------------------------------------------//
 /**
  * Hook to fetch the authenticated user's profile.
  */
-export const useUserProfile = () => { // Renamed for clarity
+export const useUserProfile = () => {
+  // Renamed for clarity
   return useQuery({
-    queryKey: ["user-profile"],
+    queryKey: ['user-profile'],
     queryFn: fetchUserProfile,
   });
 };
@@ -80,12 +76,22 @@ export const useUpdateUserProfile = () => {
 
   return useMutation({
     mutationFn: changeUserProfile,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+    onSuccess: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await queryClient.refetchQueries({
+        queryKey: ['user-profile'],
+        type: 'active', // Only refetch currently mounted queries
+      });
+
+      // Mark inactive queries as stale for next time they mount
+      queryClient.invalidateQueries({
+        queryKey: ['user-profile'],
+        refetchType: 'none', // Don't trigger refetch
+      });
     },
     onError: (error) => {
       // Optional: handle global error notifications here
-      console.error("Profile update failed:", error.message);
+      console.error('Profile update failed:', error.message);
     },
   });
 };

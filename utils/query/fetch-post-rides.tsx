@@ -5,7 +5,7 @@ import { CardParams } from '@/components/mycard';
 import { Alert } from 'react-native';
 
 // =============================================================================
-// FETCH FUNCTIONS - Database operations for rides 
+// FETCH FUNCTIONS - Database operations for rides
 // =============================================================================
 
 /**
@@ -61,10 +61,7 @@ const fetchAllRides = async (): Promise<CardParams[]> => {
  * Fetches all rides for a specific user by their user_id.
  */
 const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> => {
-  const { data, error } = await supabase
-    .from('rides')
-    .select('*')
-    .eq('user_id', userId);
+  const { data, error } = await supabase.from('rides').select('*').eq('user_id', userId);
 
   if (error && error.code !== 'PGRST116') {
     // PGRST116 is 'No rows found', which is not a critical error here
@@ -74,21 +71,15 @@ const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> 
   return data || null;
 };
 
-
-
 // =============================================================================
-// POST FUNCTIONS - Database operations for rides 
+// POST FUNCTIONS - Database operations for rides
 // =============================================================================
 
 /**
  * Adds a new ride to the database.
  * @param ride - The ride object containing destination, from, and date
  */
-const postRide = async (ride: {
-  destination: string;
-  from: string;
-  date: Date;
-}): Promise<void> => {
+const postRide = async (ride: { destination: string; from: string; date: Date }): Promise<void> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -105,9 +96,7 @@ const postRide = async (ride: {
     .single();
 
   if (profileError || !profile?.full_name) {
-    throw new Error(
-      'Could not find user profile or name. Please complete your profile.'
-    );
+    throw new Error('Could not find user profile or name. Please complete your profile.');
   }
 
   // Construct the new ride object with the user's name and ID
@@ -158,10 +147,7 @@ export const useRides = (
 /**
  * Hook to fetch all rides posted by a specific user.
  */
-export const useRidesByUserId = (
-  id: string | undefined,
-  options?: { enabled?: boolean }
-) => {
+export const useRidesByUserId = (id: string | undefined, options?: { enabled?: boolean }) => {
   return useQuery<CardParams[] | null, Error>({
     queryKey: ['rides', 'byUser', id],
     queryFn: () => fetchRidesByUserId(id as string),
@@ -193,9 +179,19 @@ export const usePostRide = () => {
 
   return useMutation({
     mutationFn: postRide,
-    onSuccess: () => {
+    onSuccess: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Refresh all queries starting with 'rides'
-      queryClient.invalidateQueries({ queryKey: ['rides'] });
+      await queryClient.refetchQueries({
+        queryKey: ['rides'],
+        type: 'active', // Only refetch currently mounted queries
+      });
+
+      // Mark inactive queries as stale for next time they mount
+      queryClient.invalidateQueries({
+        queryKey: ['rides'],
+        refetchType: 'none', // Don't trigger refetch
+      });
     },
     onError: (error: Error) => {
       Alert.alert('Error', error.message);
@@ -214,9 +210,19 @@ export const usedeleteRide = () => {
 
   return useMutation({
     mutationFn: deleteRide,
-    onSuccess: () => {
+    onSuccess: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Refresh all queries starting with 'rides'
-      queryClient.invalidateQueries({ queryKey: ['rides'] });
+      await queryClient.refetchQueries({
+        queryKey: ['rides'],
+        type: 'active', // Only refetch currently mounted queries
+      });
+
+      // Mark inactive queries as stale for next time they mount
+      queryClient.invalidateQueries({
+        queryKey: ['rides'],
+        refetchType: 'none', // Don't trigger refetch
+      });
     },
     onError: (error: Error) => {
       Alert.alert('Error', error.message);
