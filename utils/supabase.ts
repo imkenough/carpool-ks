@@ -1,11 +1,10 @@
-
-import 'react-native-url-polyfill/auto'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createClient, processLock } from '@supabase/supabase-js'
+import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient, processLock } from '@supabase/supabase-js';
 
 export const supabase = createClient(
-  '',// .ENV SUPABASE URL
-  '',// .ENV SUPABASE SECREAT KEY 
+  process.env.EXPO_PUBLIC_SUPABASE_URL, // .ENV SUPABASE URL
+  process.env.EXPO_PUBLIC_SUPABASE_KEY, // .ENV SUPABASE SECRET KEY
   {
     auth: {
       storage: AsyncStorage,
@@ -14,5 +13,5 @@ export const supabase = createClient(
       detectSessionInUrl: false,
       lock: processLock,
     },
-  })
-        
+  }
+);
