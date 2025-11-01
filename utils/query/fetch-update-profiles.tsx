@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 
 //--------------------------------------------------Types------------------------------------------------------------------------//
@@ -10,7 +6,6 @@ interface UserProfile {
   id: string;
   full_name: string;
   phone_number: string;
-  // Add other profile fields as needed
 }
 
 interface UpdateProfileParams {
@@ -27,16 +22,12 @@ const fetchUserProfile = async (): Promise<UserProfile | null> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
   if (error) {
     console.error('Error fetching user profile:', error);
@@ -56,9 +47,9 @@ const changeUserProfile = async ({
 }: UpdateProfileParams): Promise<UserProfile> => {
   const { data, error } = await supabase
     .from('profiles')
-    .update({ 
-      full_name: fullName, 
-      phone_number: phoneNumber 
+    .update({
+      full_name: fullName,
+      phone_number: phoneNumber,
     })
     .eq('id', userId)
     .select()
@@ -80,8 +71,9 @@ export const useUserProfile = () => {
   return useQuery({
     queryKey: ['user-profile'],
     queryFn: fetchUserProfile,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    retry: 2, // Retry failed requests twice
+    staleTime: 5 * 60 * 1000, // 5 minutes is fine for profile data
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    retry: 2,
   });
 };
 
@@ -93,10 +85,10 @@ export const useUpdateUserProfile = () => {
 
   return useMutation({
     mutationFn: changeUserProfile,
-    
+
     // Optimistically update before the request completes
     onMutate: async (newProfile: UpdateProfileParams) => {
-      // Cancel any outgoing refetches to prevent them from overwriting our optimistic update
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['user-profile'] });
 
       // Snapshot the previous value
@@ -111,29 +103,30 @@ export const useUpdateUserProfile = () => {
         });
       }
 
-      // Return context object with the snapshotted value
       return { previousProfile };
     },
-    
+
     // Update with actual server response on success
     onSuccess: (data) => {
+      // Directly set the data from server
       queryClient.setQueryData(['user-profile'], data);
       console.log('Profile updated successfully:', data);
     },
-    
+
     // Rollback to the previous value on error
     onError: (error, variables, context) => {
       if (context?.previousProfile) {
         queryClient.setQueryData(['user-profile'], context.previousProfile);
       }
       console.error('Profile update failed:', error);
-      // You can add toast notification here
-      // toast.error('Failed to update profile. Please try again.');
     },
-    
-    // Always refetch after error or success to ensure data consistency
+
+    // Force refetch with refetchType to override staleTime
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({
+        queryKey: ['user-profile'],
+        refetchType: 'active', // Only refetch if query is currently being used
+      });
     },
   });
 };

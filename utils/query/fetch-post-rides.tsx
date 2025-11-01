@@ -18,32 +18,23 @@ interface NewRide {
 // FETCH FUNCTIONS - Database operations for rides
 // =============================================================================
 
-/**
- * Fetches rides based on destination, origin, and a specific date.
- * @param time - Optional time range [startHour, startMinute, endHour, endMinute]
- */
 const fetchRides = async (
   destination: string,
   from: string,
   date: Date,
   time?: [number, number, number, number] | null
 ): Promise<CardParams[]> => {
-  // Default to midnight if no specific time provided
   const hoursToSet = time || [0, 0, 0, 0];
-
-  // Set start time based on the provided date and time
   const startDate = new Date(date);
   startDate.setHours(...hoursToSet);
 
-  // Calculate end time (start of next day at midnight)
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 1);
   endDate.setHours(0, 0, 0, 0);
 
-  // Query rides within the time range, joining with profiles for phone number
   const { data, error } = await supabase
     .from('rides')
-    .select('*, profiles(phone_number)') // Join profiles table to get phone_number
+    .select('*, profiles(phone_number)')
     .ilike('destination', `%${destination}%`)
     .ilike('from', `%${from}%`)
     .gte('date', startDate.toISOString())
@@ -54,27 +45,20 @@ const fetchRides = async (
   return data ?? [];
 };
 
-/**
- * Fetches all rides without any filters.
- */
 const fetchAllRides = async (): Promise<CardParams[]> => {
   const { data, error } = await supabase
     .from('rides')
-    .select('*, profiles(phone_number)') // Join profiles table to get phone_number
+    .select('*, profiles(phone_number)')
     .order('date', { ascending: true });
 
   if (error) throw new Error(error.message);
   return data ?? [];
 };
 
-/**
- * Fetches all rides for a specific user by their user_id.
- */
 const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> => {
   const { data, error } = await supabase.from('rides').select('*').eq('user_id', userId);
 
   if (error && error.code !== 'PGRST116') {
-    // PGRST116 is 'No rows found', which is not a critical error here
     throw new Error(error.message);
   }
 
@@ -85,10 +69,6 @@ const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> 
 // POST FUNCTIONS - Database operations for rides
 // =============================================================================
 
-/**
- * Adds a new ride to the database.
- * @param ride - The ride object containing destination, from, and date
- */
 const postRide = async (ride: NewRide): Promise<CardParams> => {
   const {
     data: { user },
@@ -98,7 +78,6 @@ const postRide = async (ride: NewRide): Promise<CardParams> => {
     throw new Error('User not authenticated. Cannot post ride.');
   }
 
-  // Fetch the user's full_name from their profile to populate the 'name' column in 'rides'
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('full_name')
@@ -109,15 +88,18 @@ const postRide = async (ride: NewRide): Promise<CardParams> => {
     throw new Error('Could not find user profile or name. Please complete your profile.');
   }
 
-  // Construct the new ride object with the user's name and ID
   const newRide = {
     ...ride,
     user_id: user.id,
     name: profile.full_name,
   };
 
-  const { data, error } = await supabase.from('rides').insert([newRide]).select('*, profiles(phone_number)').single();
-  
+  const { data, error } = await supabase
+    .from('rides')
+    .insert([newRide])
+    .select('*, profiles(phone_number)')
+    .single();
+
   if (error) {
     throw new Error(error.message);
   }
@@ -125,9 +107,6 @@ const postRide = async (ride: NewRide): Promise<CardParams> => {
   return data;
 };
 
-/**
- * Deletes a specific ride from the database by its ID.
- */
 const deleteRide = async (rideId: string): Promise<string> => {
   const { error } = await supabase.from('rides').delete().eq('id', rideId);
   if (error) {
@@ -141,10 +120,6 @@ const deleteRide = async (rideId: string): Promise<string> => {
 // REACT QUERY HOOKS - Custom hooks for data fetching and mutations
 // =============================================================================
 
-/**
- * Hook to fetch rides with filters (destination, origin, date, and optional time)
- * Only executes when both destination and origin are provided.
- */
 export const useRides = (
   destination: string,
   from: string,
@@ -154,35 +129,31 @@ export const useRides = (
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', destination, from, date, time],
     queryFn: () => fetchRides(destination, from, date, time),
-    enabled: Boolean(destination && from), // Prevent unnecessary queries
-    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    enabled: Boolean(destination && from),
+    staleTime: 0, // Always refetch on mount
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     retry: 2,
   });
 };
 
-/**
- * Hook to fetch all rides posted by a specific user.
- */
 export const useRidesByUserId = (id: string | undefined, options?: { enabled?: boolean }) => {
   return useQuery<CardParams[] | null, Error>({
     queryKey: ['rides', 'byUser', id],
     queryFn: () => fetchRidesByUserId(id as string),
-    // Only run if id is provided AND the caller's enabled flag is true (or not set)
     enabled: Boolean(id) && (options?.enabled ?? true),
-    staleTime: 30 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
     retry: 2,
     ...options,
   });
 };
 
-/**
- * Hook to fetch all rides without filters.
- */
 export const useAllRides = () => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'all'],
     queryFn: fetchAllRides,
-    staleTime: 30 * 1000,
+    staleTime: 0, // Always refetch on mount
+    gcTime: 5 * 60 * 1000,
     retry: 2,
   });
 };
@@ -191,159 +162,66 @@ export const useAllRides = () => {
 // MUTATIONS - Hooks for creating and deleting rides
 // =============================================================================
 
-/**
- * Hook to create a new ride (mutation) with optimistic updates.
- * Automatically updates the UI before the server responds.
- */
 export const usePostRide = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: postRide,
-    
-    // Optimistically add the ride before server responds
-    onMutate: async (newRide: NewRide) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['rides'] });
 
-      // Snapshot previous values for all ride queries
-      const previousAllRides = queryClient.getQueryData<CardParams[]>(['rides', 'all']);
-      const previousFilteredRides = queryClient.getQueriesData<CardParams[]>({ queryKey: ['rides'] });
-
-      // Get current user info for optimistic update
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // Create optimistic ride object with temporary ID
-        const optimisticRide = {
-          id: `temp-${Date.now()}`, // Temporary ID
-          destination: newRide.destination,
-          from: newRide.from,
-          date: newRide.date,
-          user_id: user.id,
-          name: 'Loading...', // Will be replaced by server response
-          profiles: { phone_number: '' },
-          created_at: new Date().toISOString(),
-        };
-
-        // Optimistically update 'all rides' cache
-        queryClient.setQueryData<any[]>(['rides', 'all'], (old) => {
-          if (!old) return [optimisticRide];
-          return [...old, optimisticRide];
-        });
-
-        // Optimistically update filtered rides caches
-        previousFilteredRides.forEach(([queryKey, oldData]) => {
-          if (Array.isArray(oldData) && queryKey[0] === 'rides' && queryKey.length > 2) {
-            queryClient.setQueryData(queryKey, [...oldData, optimisticRide]);
-          }
-        });
-      }
-
-      return { previousAllRides, previousFilteredRides };
-    },
-
-    // Update with actual server response
-    onSuccess: (data) => {
-      // Replace the optimistic ride with the real one from the server
+    onSuccess: (newRide) => {
+      // Update 'all rides' cache
       queryClient.setQueryData<CardParams[]>(['rides', 'all'], (old) => {
-        if (!old) return [data];
-        // Remove temp ride and add real one
-        return [...old.filter(ride => !ride.id.startsWith('temp-')), data];
+        if (!old) return [newRide];
+        return [...old, newRide].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
       });
 
-      console.log('✅ Ride posted successfully:', data);
+      console.log('✅ Ride posted successfully:', newRide);
     },
 
-    // Rollback on error
-    onError: (error: Error, variables, context) => {
-      // Restore previous state
-      if (context?.previousAllRides) {
-        queryClient.setQueryData(['rides', 'all'], context.previousAllRides);
-      }
-      
-      if (context?.previousFilteredRides) {
-        context.previousFilteredRides.forEach(([queryKey, oldData]) => {
-          queryClient.setQueryData(queryKey, oldData);
-        });
-      }
-
+    onError: (error: Error) => {
       Alert.alert('Error', error.message);
       console.error('❌ Error posting ride:', error.message);
     },
 
-    // Always refetch to ensure consistency
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['rides'] });
+      // Invalidate all ride queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: ['rides'],
+        refetchType: 'all', // Force refetch even if query is inactive
+      });
     },
   });
 };
 
-/**
- * Hook to delete a ride (mutation) with optimistic updates.
- * Automatically removes the ride from UI before server responds.
- */
 export const usedeleteRide = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteRide,
-    
-    // Optimistically remove the ride before server responds
-    onMutate: async (rideId: string) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['rides'] });
 
-      // Snapshot previous values
-      const previousAllRides = queryClient.getQueryData<CardParams[]>(['rides', 'all']);
-      const previousFilteredRides = queryClient.getQueriesData<CardParams[]>({ queryKey: ['rides'] });
-
-      // Optimistically remove the ride from all caches
+    onSuccess: (deletedId) => {
+      // Immediately remove from all caches
       queryClient.setQueryData<CardParams[]>(['rides', 'all'], (old) => {
         if (!old) return [];
-        return old.filter(ride => ride.id !== rideId);
+        return old.filter((ride) => ride.id !== deletedId);
       });
 
-      // Update all filtered ride queries
-      previousFilteredRides.forEach(([queryKey, oldData]) => {
-        if (Array.isArray(oldData)) {
-          queryClient.setQueryData(
-            queryKey,
-            oldData.filter(ride => ride.id !== rideId)
-          );
-        }
-      });
-
-      return { previousAllRides, previousFilteredRides, deletedRideId: rideId };
-    },
-
-    // On success, just log
-    onSuccess: (deletedId) => {
       console.log('✅ Ride deleted successfully:', deletedId);
     },
 
-    // Rollback on error
-    onError: (error: Error, variables, context) => {
-      // Restore previous state
-      if (context?.previousAllRides) {
-        queryClient.setQueryData(['rides', 'all'], context.previousAllRides);
-      }
-      
-      if (context?.previousFilteredRides) {
-        context.previousFilteredRides.forEach(([queryKey, oldData]) => {
-          queryClient.setQueryData(queryKey, oldData);
-        });
-      }
-
+    onError: (error: Error) => {
       Alert.alert('Error', error.message);
       console.error('❌ Error deleting ride:', error.message);
     },
 
-    // Always refetch to ensure consistency
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['rides'] });
+      // Invalidate all ride queries
+      queryClient.invalidateQueries({
+        queryKey: ['rides'],
+        refetchType: 'all',
+      });
     },
   });
 };

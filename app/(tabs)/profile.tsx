@@ -42,7 +42,6 @@ import loginStore from '@/utils/states/login-zus';
 import { performLogout } from '@/utils/local-storage/islogin';
 import { useUpdateUserProfile, useUserProfile } from '@/utils/query/fetch-update-profiles';
 import { usedeleteRide, useRidesByUserId } from '@/utils/query/fetch-post-rides';
-import { AlertBox } from '@/components/my-alert';
 import { CardParams } from '@/components/mycard';
 
 export default function ProfileScreen() {
