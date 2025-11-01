@@ -5,6 +5,16 @@ import { CardParams } from '@/components/mycard';
 import { Alert } from 'react-native';
 
 // =============================================================================
+// TYPES
+// =============================================================================
+
+interface NewRide {
+  destination: string;
+  from: string;
+  date: Date;
+}
+
+// =============================================================================
 // FETCH FUNCTIONS - Database operations for rides
 // =============================================================================
 
@@ -79,7 +89,7 @@ const fetchRidesByUserId = async (userId: string): Promise<CardParams[] | null> 
  * Adds a new ride to the database.
  * @param ride - The ride object containing destination, from, and date
  */
-const postRide = async (ride: { destination: string; from: string; date: Date }): Promise<void> => {
+const postRide = async (ride: NewRide): Promise<CardParams> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -106,21 +116,25 @@ const postRide = async (ride: { destination: string; from: string; date: Date })
     name: profile.full_name,
   };
 
-  const { error } = await supabase.from('rides').insert([newRide]);
+  const { data, error } = await supabase.from('rides').insert([newRide]).select('*, profiles(phone_number)').single();
+  
   if (error) {
     throw new Error(error.message);
   }
+
+  return data;
 };
 
 /**
  * Deletes a specific ride from the database by its ID.
  */
-const deleteRide = async (rideId: string) => {
+const deleteRide = async (rideId: string): Promise<string> => {
   const { error } = await supabase.from('rides').delete().eq('id', rideId);
   if (error) {
     console.error('Error deleting ride:', error);
     throw new Error(error.message);
   }
+  return rideId;
 };
 
 // =============================================================================
@@ -141,6 +155,8 @@ export const useRides = (
     queryKey: ['rides', destination, from, date, time],
     queryFn: () => fetchRides(destination, from, date, time),
     enabled: Boolean(destination && from), // Prevent unnecessary queries
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    retry: 2,
   });
 };
 
@@ -153,11 +169,11 @@ export const useRidesByUserId = (id: string | undefined, options?: { enabled?: b
     queryFn: () => fetchRidesByUserId(id as string),
     // Only run if id is provided AND the caller's enabled flag is true (or not set)
     enabled: Boolean(id) && (options?.enabled ?? true),
+    staleTime: 30 * 1000,
+    retry: 2,
     ...options,
   });
 };
-
-//--------------------------------------------Mutations-----------------------------------------------------------
 
 /**
  * Hook to fetch all rides without filters.
@@ -166,67 +182,168 @@ export const useAllRides = () => {
   return useQuery<CardParams[], Error>({
     queryKey: ['rides', 'all'],
     queryFn: fetchAllRides,
+    staleTime: 30 * 1000,
+    retry: 2,
   });
 };
 
-/**
- * Hook to create a new ride (mutation).
- * Automatically invalidates all ride queries on success to refresh data.
- */
+// =============================================================================
+// MUTATIONS - Hooks for creating and deleting rides
+// =============================================================================
 
+/**
+ * Hook to create a new ride (mutation) with optimistic updates.
+ * Automatically updates the UI before the server responds.
+ */
 export const usePostRide = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: postRide,
-    onSuccess: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      // Refresh all queries starting with 'rides'
-      await queryClient.refetchQueries({
-        queryKey: ['rides'],
-        type: 'active', // Only refetch currently mounted queries
+    
+    // Optimistically add the ride before server responds
+    onMutate: async (newRide: NewRide) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['rides'] });
+
+      // Snapshot previous values for all ride queries
+      const previousAllRides = queryClient.getQueryData<CardParams[]>(['rides', 'all']);
+      const previousFilteredRides = queryClient.getQueriesData<CardParams[]>({ queryKey: ['rides'] });
+
+      // Get current user info for optimistic update
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // Create optimistic ride object with temporary ID
+        const optimisticRide = {
+          id: `temp-${Date.now()}`, // Temporary ID
+          destination: newRide.destination,
+          from: newRide.from,
+          date: newRide.date,
+          user_id: user.id,
+          name: 'Loading...', // Will be replaced by server response
+          profiles: { phone_number: '' },
+          created_at: new Date().toISOString(),
+        };
+
+        // Optimistically update 'all rides' cache
+        queryClient.setQueryData<any[]>(['rides', 'all'], (old) => {
+          if (!old) return [optimisticRide];
+          return [...old, optimisticRide];
+        });
+
+        // Optimistically update filtered rides caches
+        previousFilteredRides.forEach(([queryKey, oldData]) => {
+          if (Array.isArray(oldData) && queryKey[0] === 'rides' && queryKey.length > 2) {
+            queryClient.setQueryData(queryKey, [...oldData, optimisticRide]);
+          }
+        });
+      }
+
+      return { previousAllRides, previousFilteredRides };
+    },
+
+    // Update with actual server response
+    onSuccess: (data) => {
+      // Replace the optimistic ride with the real one from the server
+      queryClient.setQueryData<CardParams[]>(['rides', 'all'], (old) => {
+        if (!old) return [data];
+        // Remove temp ride and add real one
+        return [...old.filter(ride => !ride.id.startsWith('temp-')), data];
       });
 
-      // Mark inactive queries as stale for next time they mount
-      queryClient.invalidateQueries({
-        queryKey: ['rides'],
-        refetchType: 'none', // Don't trigger refetch
-      });
+      console.log('✅ Ride posted successfully:', data);
     },
-    onError: (error: Error) => {
+
+    // Rollback on error
+    onError: (error: Error, variables, context) => {
+      // Restore previous state
+      if (context?.previousAllRides) {
+        queryClient.setQueryData(['rides', 'all'], context.previousAllRides);
+      }
+      
+      if (context?.previousFilteredRides) {
+        context.previousFilteredRides.forEach(([queryKey, oldData]) => {
+          queryClient.setQueryData(queryKey, oldData);
+        });
+      }
+
       Alert.alert('Error', error.message);
       console.error('❌ Error posting ride:', error.message);
+    },
+
+    // Always refetch to ensure consistency
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['rides'] });
     },
   });
 };
 
 /**
- * Hook to delete a ride (mutation).
- * Automatically invalidates all ride queries on success to refresh data.
+ * Hook to delete a ride (mutation) with optimistic updates.
+ * Automatically removes the ride from UI before server responds.
  */
-
 export const usedeleteRide = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteRide,
-    onSuccess: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      // Refresh all queries starting with 'rides'
-      await queryClient.refetchQueries({
-        queryKey: ['rides'],
-        type: 'active', // Only refetch currently mounted queries
+    
+    // Optimistically remove the ride before server responds
+    onMutate: async (rideId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['rides'] });
+
+      // Snapshot previous values
+      const previousAllRides = queryClient.getQueryData<CardParams[]>(['rides', 'all']);
+      const previousFilteredRides = queryClient.getQueriesData<CardParams[]>({ queryKey: ['rides'] });
+
+      // Optimistically remove the ride from all caches
+      queryClient.setQueryData<CardParams[]>(['rides', 'all'], (old) => {
+        if (!old) return [];
+        return old.filter(ride => ride.id !== rideId);
       });
 
-      // Mark inactive queries as stale for next time they mount
-      queryClient.invalidateQueries({
-        queryKey: ['rides'],
-        refetchType: 'none', // Don't trigger refetch
+      // Update all filtered ride queries
+      previousFilteredRides.forEach(([queryKey, oldData]) => {
+        if (Array.isArray(oldData)) {
+          queryClient.setQueryData(
+            queryKey,
+            oldData.filter(ride => ride.id !== rideId)
+          );
+        }
       });
+
+      return { previousAllRides, previousFilteredRides, deletedRideId: rideId };
     },
-    onError: (error: Error) => {
+
+    // On success, just log
+    onSuccess: (deletedId) => {
+      console.log('✅ Ride deleted successfully:', deletedId);
+    },
+
+    // Rollback on error
+    onError: (error: Error, variables, context) => {
+      // Restore previous state
+      if (context?.previousAllRides) {
+        queryClient.setQueryData(['rides', 'all'], context.previousAllRides);
+      }
+      
+      if (context?.previousFilteredRides) {
+        context.previousFilteredRides.forEach(([queryKey, oldData]) => {
+          queryClient.setQueryData(queryKey, oldData);
+        });
+      }
+
       Alert.alert('Error', error.message);
       console.error('❌ Error deleting ride:', error.message);
+    },
+
+    // Always refetch to ensure consistency
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['rides'] });
     },
   });
 };

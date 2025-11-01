@@ -6,6 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { Slot, useRouter, SplashScreen } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
+import { useEffect } from 'react';
 
 // Prevent the splash screen from auto-hiding before complete authentication check
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +20,10 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const queryClient = new QueryClient();
 
+  useEffect(() => {
+    // Hide splash screen once the layout is mounted
+    SplashScreen.hideAsync();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -26,8 +31,8 @@ export default function RootLayout() {
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         <Slot
           screenOptions={{
-            animation: 'none', // Corrected property
-            headerShown: false // Often useful when customizing layouts
+            animation: 'none',
+            headerShown: false
           }}
         />
         <PortalHost />

@@ -15,7 +15,8 @@ GoogleSignin.configure({
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email'
   ],
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_ID,
+  webClientId:  '' // .ENV GOOGLE SIGN-IN 
+  
 });
 
 async function googleSignin() {
