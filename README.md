@@ -1,4 +1,4 @@
-# Carpool App
+# College Carpool App
 
 This is a carpooling application built with React Native and Expo. It allows users to sign up, sign in, and find rides. _repository version is built specifically for our university_
 
