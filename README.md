@@ -1,73 +1,117 @@
-# Minimal Template
+# Carpool App
 
-This is a [React Native](https://reactnative.dev/) project built with [Expo](https://expo.dev/) and [React Native Reusables](https://reactnativereusables.com).
+This is a carpooling application built with React Native and Expo. It allows users to sign up, sign in, and find rides. _repository version is built specifically for our university_
 
-It was initialized using the following command:
+## Features
 
-```bash
-npx @react-native-reusables/cli@latest init -t carpool
+- **Authentication:** Users can sign up and sign in to their accounts using Google one-tap.
+- **Post a Ride:** Users can post a ride by providing the destination, source, date, and time.
+- **Ride Listing:** Users can view a list of available rides.
+- **Join a Ride:** Users can join a ride by clicking on the "Join Ride" button, which will open a WhatsApp chat with the ride poster.
+- **Profile:** Users can view their own profile.
+
+## Project Structure
+
 ```
+C:\Users\hanee\Desktop\carpool-ks\
+├───app
+│   ├───(tabs)
+│   └───auth
+├───assets
+│   └───images
+├───components
+│   └───ui
+├───lib
+└───utils
+    ├───hooks
+    ├───local-storage
+    ├───query
+    └───states
+```
+
+- **app:** This directory contains the main application logic, including the screens and navigation.
+  - **(tabs):** This directory contains the screens that are part of the tab navigation.
+  - **auth:** This directory contains the authentication screens (sign-in and sign-up).
+- **assets:** This directory contains the static assets of the app, such as images and fonts.
+- **components:** This directory contains the reusable UI components of the app.
+  - **ui:** This directory contains the basic UI components, such as buttons, inputs, and cards.
+- **lib:** This directory contains the utility functions and libraries used in the app.
+- **utils:** This directory contains the utility functions and hooks used in the app.
+  - **hooks:** This directory contains the custom React hooks.
+  - **local-storage:** This directory contains the functions for interacting with the local storage.
+  - **query:** This directory contains the functions for fetching and updating data from the Supabase database.
+  - **states:** This directory contains the state management logic of the app.
+
+## Screens
+
+- **Sign In:** This screen allows users to sign in to their accounts.
+- **Sign Up:** This screen allows users to create a new account.
+- **Home:** This is the main screen of the app. It allows users to create a ride request.
+- **Rides:** This screen displays a list of available rides based on the user's search criteria.
+- **Profile:** This screen displays the user's profile information.
+
+## Data Flow
+
+The app uses a client-server architecture. The client is a React Native app, and the server is a Supabase backend. The data flows as follows:
+
+1.  The UI components dispatch actions to the state management store (Zustand).
+2.  The state management store updates the state of the app.
+3.  The UI components re-render based on the new state.
+4.  The app uses Tanstack Query to fetch data from the Supabase database.
+5.  The data is then displayed in the UI components.
+
+## State Management
+
+The app uses Zustand for state management. Zustand is a small, fast, and scalable state management solution for React. It is used to manage the login state of the app.
+
+## API and Database
+
+The app uses Supabase for its backend. Supabase is an open-source Firebase alternative that provides a PostgreSQL database, authentication, and real-time subscriptions.
+
+The app interacts with the Supabase API using the `@supabase/supabase-js` library. The database schema is defined in the `supabase.sql` file.
 
 ## Getting Started
 
-To run the development server:
+To get a local copy up and running, follow these simple steps.
 
-```bash
-    npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
-    # or
-    bun dev
-```
+### Prerequisites
 
-This will start the Expo Dev Server. Open the app in:
+- Node.js
+- Expo CLI
 
-- **iOS**: press `i` to launch in the iOS simulator _(Mac only)_
-- **Android**: press `a` to launch in the Android emulator
-- **Web**: press `w` to run in a browser
+### Installation
 
-You can also scan the QR code using the [Expo Go](https://expo.dev/go) app on your device. This project fully supports running in Expo Go for quick testing on physical devices.
+1.  Clone the repo
+    ```sh
+    git clone https://github.com/your_username_/Carpool-App.git
+    ```
+2.  Install NPM packages
+    ```sh
+    npm install
+    ```
+3.  Start the development server
+    ```sh
+    npx expo start
+    ```
 
-## Adding components
+## Dependencies
 
-You can add more reusable components using the CLI:
+- **React Native:** A framework for building native apps with React.
+- **Expo:** A framework and a platform for universal React applications.
+- **Supabase:** An open source Firebase alternative for building secure and scalable backends.
+- **React Navigation:** Routing and navigation for your React Native apps.
+- **Zustand:** A small, fast and scalable bearbones state-management solution.
+- **Nativewind:** Use Tailwind CSS with React Native.
+- **React Native Reusables:** Use Tailwind CSS with React Native.
+- **Tanstack-Query:** Hooks for fetching, caching and updating asynchronous data in React.
 
-```bash
-npx react-native-reusables/cli@latest add [...components]
-```
+## Contributors
 
-> e.g. `npx react-native-reusables/cli@latest add input textarea`
+- [@imkenough](https://github.com/imkenough)
+- [@siddharth3690](https://github.com/siddharth3690)
 
-If you don't specify any component names, you'll be prompted to select which components to add interactively. Use the `--all` flag to install all available components at once.
+## Support
 
-## Project Features
+Star this Repo :)
 
-- ⚛️ Built with [Expo Router](https://expo.dev/router)
-- 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Nativewind](https://www.nativewind.dev/)
-- 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
-- 🚀 New Architecture enabled
-- 🔥 Edge to Edge enabled
-- 📱 Runs on iOS, Android, and Web
-
-## Learn More
-
-To dive deeper into the technologies used:
-
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-- [Expo Docs](https://docs.expo.dev/)
-- [Nativewind Docs](https://www.nativewind.dev/)
-- [React Native Reusables](https://reactnativereusables.com)
-
-## Deploy with EAS
-
-The easiest way to deploy your app is with [Expo Application Services (EAS)](https://expo.dev/eas).
-
-- [EAS Build](https://docs.expo.dev/build/introduction/)
-- [EAS Updates](https://docs.expo.dev/eas-update/introduction/)
-- [EAS Submit](https://docs.expo.dev/submit/introduction/)
-
----
-
-If you enjoy using React Native Reusables, please consider giving it a ⭐ on [GitHub](https://github.com/founded-labs/react-native-reusables). Your support means a lot!
+![174794647-0c851917-e5c9-4fb9-bf88-b61d89dc2f4f](https://github.com/user-attachments/assets/df4795f1-3181-43c7-af7f-68eb9b814d1c)
