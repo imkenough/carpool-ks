@@ -1,7 +1,4 @@
-import {
-  GoogleSignin,
-  statusCodes,
-} from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { supabase } from '../supabase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
@@ -13,10 +10,9 @@ import { performLogin } from '../local-storage/islogin';
 GoogleSignin.configure({
   scopes: [
     'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/userinfo.email'
+    'https://www.googleapis.com/auth/userinfo.email',
   ],
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_ID, // .ENV GOOGLE SIGN-IN 
-  
+  webClientId: '145706147239-2mc9i578acig3qamvpvhfdrvahtl1rvl.apps.googleusercontent.com', // .ENV GOOGLE SIGN-IN
 });
 
 async function googleSignin() {
@@ -63,7 +59,6 @@ async function googleSignin() {
     const isProfileComplete = !!(profile?.full_name && profile?.phone_number);
 
     return { ...data, isProfileComplete };
-
   } catch (error: any) {
     console.error('Google Sign-In Error:', error.code || error.message);
 
@@ -91,9 +86,8 @@ export const useGoogleSignIn = () => {
   const router = useRouter();
   const { login } = loginStore();
   const handleLogin = async () => {
-    login()
-    await performLogin()
-
+    login();
+    await performLogin();
   };
 
   return useMutation({
@@ -106,12 +100,10 @@ export const useGoogleSignIn = () => {
 
       console.log('✅ Google Sign-In Successful');
       if (data.isProfileComplete) {
-        
-        handleLogin()
+        handleLogin();
         router.replace('/');
       }
-      router.push('../auth/sign-up')
-
+      router.push('../auth/sign-up');
     },
     onError: (error: Error) => {
       Alert.alert('Sign-In Failed', error.message);
