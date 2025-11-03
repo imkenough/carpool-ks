@@ -27,7 +27,10 @@ export const MyCard: React.FC<CardParams> = (props) => {
   const date = new Date(props.date + 'Z');
 
   const handlePress = async () => {
-    const whatsappUrl = 'https://wa.me/+91' + props.profiles.phone_number;
+    const message = encodeURIComponent(
+      'Hey! I found your ride on the Carpool app. Is this seat still available?'
+    ); //preset msg
+    const whatsappUrl = `https://wa.me/+91${props.profiles.phone_number}?text=${message}`;
     console.log(whatsappUrl);
     await Linking.openURL(whatsappUrl);
   };
