@@ -79,6 +79,10 @@ To get a local copy up and running, follow these simple steps.
 - Node.js
 - Expo CLI
 
+### Environment variables
+
+- refer `.env.example`
+
 ### Installation
 
 1.  Clone the repo
